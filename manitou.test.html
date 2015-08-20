@@ -1,0 +1,279 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<link rel="shortcut icon" href="http://testdb1.odobo.local/tool/i/circle.png?t=1440070442" />
+	<title>playing PLOT</title>
+	<!--link href="css.css" rel="stylesheet" type="text/css"-->
+
+	<!--[if lte IE 8]><script language="javascript" type="text/javascript" src="../../excanvas.min.js"></script><![endif]-->
+	<script language="javascript" type="text/javascript" src="flot/jquery.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.time.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.pie.js"></script>
+	<script language="javascript" type="text/javascript" src="flot/jquery.flot.selection.js"></script>
+	<script type="text/javascript" src="manitou.js"></script>
+	<script type="text/javascript" src="manitou.pulsate.js"></script>
+	<script src="jquery-ui-1.10.4/ui/jquery-ui.js"></script>
+	<script id="defaults" type="application/json">{"hostname":"db01.odobo.prod","Yx1":10,"Yn1":0,"Yx2":100,"Yn2":0,"Yx3":200,"Yn3":0,"Yx4":100,"Yn4":0}</script>
+	<style>
+		table.DetailsTable 
+		{
+			font-size:9pt;
+			border: 1 #aaddaa solid;
+		
+		}
+		input[type="text"] {
+			font-size:9px;
+			border: 1px solid #aa0000;
+		}
+	</style>
+</head>
+<body>
+	<div id="header" >
+		<div style="font-size:10px;">
+			<form id="IamZiForm">
+				<div id="AxisProperties" style="display:none;">
+					<input id="AxisPropertiesMax" ondblclick="this.form.submit();" name="" style="width:25px;" />
+					<br>
+					<input id="AxisPropertiesMin" ondblclick="this.form.submit();" name="" style="width:25px;" />
+				</div>
+			
+			<span id="wheel_1">
+				<span style="">
+					<img 
+						src="i/sett.gif" 
+						style="width:20px;height:20px;" 
+						id="wheel_image_1" 
+						title="Graph settings"
+						onclick="
+							menu=getElementById('wheel_menu_1');ShowHide(menu);oldmenu=getElementById('heart_menu_1');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_2');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_3');oldmenu.style.display='none';
+							" 
+					>
+					<div style="position:absolute;opacity:0.9;border:1px solid red;background-color:orange;z-index:98;left:160px;display:none;" id="wheel_menu_1">
+						<a href="" id="status_button_1" onclick="window.open('http://testdb1.odobo.local/tool/manitou.settings.php');return false;" >
+							Detailed settings
+						</a>
+						<br>
+						<i><select name="hostname" onchange="this.form.submit();" style="font-size:10px;"><option value="db00.odobo.prod">Pick Up The Host<option  value="db00.odobo.prod">db00.odobo.prod<option  SELECTED  value="db01.odobo.prod">db01.odobo.prod<option  value="freeplay.odobo.qa">freeplay.odobo.qa<option  value="db00.odobo.stg">db00.odobo.stg</select></i>
+				<br>
+				<select name="sess_back" onchange="this.form.submit();"><option value="Array">Pick Up FlashBack<option  SELECTED  value="1">1 hour<option  value="2">2 hours<option  value="3">3 hours<option  value="5">5 hours<option  value="12">12 hours<option  value="24">1 day<option  value="48">2 days<option  value="72">3 days<option  value="168">1 week</select>
+	<br>
+	Hdd & RAM Longitude: 
+	<br>
+<select name="disk_back" onchange="this.form.submit();"  style="font-size:10px;"><option value="Array">Pick Up FlashBack<option  SELECTED  value="1">1 day<option  value="2">2 days<option  value="3">3 days<option  value="5">5 days<option  value="7">1 week<option  value="14">2 weeks<option  value="21">3 weeks<option  value="28">4 weeks<option  value="31">1 month</select>
+	<br>
+	<br>
+	
+	<div id="AxisProperties">
+	</div>
+	
+	<div id="FileContents">
+	</div>
+	
+					</div>
+				</span>
+				
+			</span>
+
+			<span id="heart_1">
+				<span style="">
+					<img 
+						src="i/greenheart.gif" 
+						style="width:20px;height:20px;" 
+						id="heart_image_1" 
+						title="Wesley's User Agent"
+						onclick="
+							menu=getElementById('heart_menu_1');ShowHide(menu);
+							oldmenu=getElementById('wheel_menu_1');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_2');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_3');oldmenu.style.display='none';
+							" 
+					>
+					<span id="heart_det_span_1" style="font-size:9px;">
+					</span>
+					<div style="position:absolute;opacity:0.9;border:1px solid red;background-color:orange;z-index:98;left:160px;display:none;" id="heart_menu_1">
+						<a href="http://testdb1.odobo.local/tool/manitou.heartbeat.php" id="status_button_1" onclick="window.open('http://testdb1.odobo.local/tool/manitou.heartbeat.php');return false;" >
+							Detailed Wesley
+						</a>
+						<br><i>Last seen: </i><u id="lastseen_1"></u><i> seconds ago</i>
+						<br><i>At: </i><u id="reftime_1"></u><i> </i>
+						<br><i>Elapsed: </i><u id="timetook_1"></u><i> seconds</i>
+						<br><i>Updated: </i><u id="sessions_1"></u><i> sessions</i>
+						<br>
+						<i title="Make me red in N seconds">Threadshold: </i>
+						<input type=text name="WesleyMax" value="60" style="width:25px;border: 1 solid #aadd00;" onchange="this.form.submit();"/>
+						<i> </i>
+						<br>
+					</div>
+				</span>
+				
+			</span>
+
+			<span id="heart_2">
+				<span style="">
+					<img 
+						src="i/greenheart.gif" 
+						style="width:20px;height:20px;" 
+						id="heart_image_2" 
+						title="Blocking locks!!!"
+						onclick="
+							menu=getElementById('heart_menu_2');ShowHide(menu);
+							oldmenu=getElementById('wheel_menu_1');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_1');oldmenu.style.display='none';
+							oldmenu=getElementById('heart_menu_3');oldmenu.style.display='none';
+							" 
+					>
+					<span id="heart_det_span_2" style="font-size:9px;">
+					</span>
+					<div style="position:absolute;opacity:0.9;border:1px solid red;background-color:orange;z-index:98;left:160px;display:none;" id="heart_menu_2">
+						<a href="" id="status_button_2">
+							Detailed Blockers
+						</a>
+						<br><i>Last seen: </i><u id="lastseen_2"></u><i> seconds ago</i>
+						<br><i title="Make me red in N seconds">Threadshold: </i><input name="BlockingMax" value="60" style="width:25px;" /><i> </i>
+						<br>
+					</div>
+				</span>
+				
+			</span>
+
+			<span id="heart_3">
+				<span style="">
+					<img 
+						src="i/greenheart.gif" 
+						style="width:20px;height:20px;" 
+						id="heart_image_3" 
+						title="Lost Operators"
+						onclick="menu=getElementById('heart_menu_3');ShowHide(menu);oldmenu=getElementById('wheel_menu_1');oldmenu.style.display='none';oldmenu=getElementById('heart_menu_1');oldmenu.style.display='none';oldmenu=getElementById('heart_menu_2');oldmenu.style.display='none';" 
+					>
+					<span id="heart_det_span_3" style="font-size:9px;">
+					</span>
+					<div style="position:absolute;opacity:0.9;border:1px solid red;background-color:orange;z-index:98;left:160px;display:none;" id="heart_menu_3">
+						<a href="" id="status_button_2" onclick="window.open('http://testdb1.odobo.local/tool/opsos.php');return false;">
+							Detailed Operators
+						</a>
+						<br><i>Last seen: </i><u id="lastseen_3"></u><i> seconds ago</i>
+						<br><i title="Make me red in N seconds">Threadshold: </i><input name="BlockingMax" value="60" style="width:25px;" /><i> </i>
+						<br>
+					</div>
+				</span>
+				
+			</span>
+			<span id="ts3">.</span>
+
+
+			</form>
+		</div>
+	</div>
+	
+	
+
+	<table id="content">
+		<tr>
+			<td colspan=2 >
+				<div>
+					<div 
+						id="session_hour_butt" 
+						style="
+							width:22px;
+							height:15px;
+							position: absolute;
+							background-color:black;
+							opacity:0.3;
+							top:50px;
+							left:68px;
+							z-index:99;
+						"
+						onclick="menu=getElementById('session_hour_menu');ShowHide(menu);"
+					>
+						<div 
+							id="session_hour_menu"
+							style="
+								width:220px;
+								height:150px;
+								background-color:black;
+								opacity:0.99;
+								display:none;
+								z-index:100;
+							"
+						>
+							<br>
+							<input id="updateInterval" type="text" value="" style="text-align: right; width:5em">
+						</div>
+					</div>
+					<div id="placeholder" class="demo-placeholder" style="width:600px;height:200px;">
+					</div>
+					<div>
+						<img 
+							id="pause_sign"
+							src="pause.png" 
+							style="
+								width:15px;
+								position: absolute;
+								opacity:0.9;
+								top:52px;
+								left:524px;
+								display:none;
+							"
+							onclick="//location.reload();"
+						>
+					</div>
+				</div>
+			</td>
+			<td><div id="circle">
+					<div id="hdd" style="height:150px;width:200px;position:absolute;top:60px;"> </div>
+					<div id="ram" style="height:200px;width:200px;"> </div>
+					<div id="swap" style="height:205px;width:200px;position:absolute;top:5px;z-index:-99;opacity:0.5;"></div>
+				</div>
+			</td>
+			<td>
+				
+				<form>
+				</form>
+			</td>
+		</tr>
+		<tr>
+			<td colspan=4>
+					<div id="monthDisk" style="width:800px;height:100px;"></div>
+				
+			</td>
+		</tr>
+	</table>
+	
+			<p><label></p><span id="hoverdata"></span>		<span id="clickdata"></span>
+
+				<div >
+					<div style="display:inherit;" id="DotValues">
+					</div>
+					<div style="display:inherit;" id="FileList">
+					</div>
+					<pre style="display:inherit;font-size:11px;" id="FileContent">
+					</pre>
+					<div>
+						<a href="" style="color:#FF6600;font-size:12px;" onclick="d=getElementById('TestDivWithLinks');ShowHide(d);return false;">Links</a>
+					</div>
+					<div style="display:none;" id="TestDivWithLinks">
+						<a href="http://www.postgresql.org/docs/9.2/static/view-pg-locks.html">pg_locks</a>
+						<br>
+						<a href="http://www.postgresql.org/docs/9.2/static/catalogs.html">catalog</a>
+						<br>
+						<a href="https://github.com/flot/flot/blob/master/API.md#plot-options">Flot Reference</a>
+						<br>
+						<a href="http://flot.googlecode.com/svn/trunk/API.txt">Flot API</a>
+						<br>
+						<a href="http://www.flotcharts.org/flot/examples/">Flot Examples</a>
+						<br>
+						<a href="http://jqueryui.com/selectable/">Use Jquery Ui for dropdown on games to be able to use styles for new games...</a>
+						<br>
+						<a href="http://www.flotcharts.org/flot/examples/navigate/index.html">Plot moving and zooming data in graph</a>
+					</div>
+				</div>
+				<br>
+
+</body>
+</html>
