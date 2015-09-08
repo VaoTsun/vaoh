@@ -2,12 +2,13 @@
 var vars = { 
 	  "reFreshEvery": 5000
 	, "dryOut" : 500
+	, "x" : 19
+	, "y" : 9
 	, "lazyVar": {"recentObjects":[]}
 	, "plopText" : "plop"
-	, "dryText" : ["cannabis","cocaine","ecstasy","heroin","meth","LSD", "mushrooms-mishrooms","joint"]
-	, "wetText" : ["plop","drip","splash","splot","plink","pitter-patter", "glop"]
+	, "dryText" : [""]//["cannabis","cocaine","ecstasy","heroin","meth","LSD", "mushrooms-mishrooms","joint"]
+	, "wetText" : ["plop","drip","splash","splot","plink","pitter-patter", "glop"]	/*	http://www.writtensound.com/index.php?term=liquid	*/
 	, "initText" : [""]
-	/*	http://www.writtensound.com/index.php?term=liquid	*/
 	, "styles": {
 		  "defaultColor":"#449977"
 		, "plop" : {
@@ -29,8 +30,8 @@ var vars = {
 			, "borderStyle": "solid"
 			, "backgroundColor": "#ffFFff"
 			, "color": "#000000"
-			, "width": 100
-			, "height": 100
+			, "width": 50
+			, "height": 50
 			, "text-align" : "center"
 		}
 
@@ -81,7 +82,7 @@ function makeItLook() {
 	}
 	vars.lazyVar.recentObjects=[];
 	setTimeout(function() {
-		document.body.innerHTML='';
+		document.getElementById("o").innerHTML='';
 		createTable();
 		makeItLook();
 		}
@@ -110,8 +111,8 @@ function shuffle(array) {
 }
 
 function createTable() {
-	var x = 5;
-	var y = 5;
+	var x = vars.x;
+	var y = vars.y;
 	var table = document.createElement("TABLE"); 
 	for (var i=0;i<y;i++) {
 		var tr = document.createElement("TR"); 
