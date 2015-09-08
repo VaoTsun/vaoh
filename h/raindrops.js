@@ -4,8 +4,9 @@ var vars = {
 	, "dryOut" : 500
 	, "lazyVar": {"recentObjects":[]}
 	, "plopText" : "plop"
-	, "dryText" : ""
+	, "dryText" : ["cannabis","cocaine","ecstasy","heroin","meth","LSD", "mushrooms-mishrooms","joint"]
 	, "wetText" : ["plop","drip","splash","splot","plink","pitter-patter", "glop"]
+	, "initText" : [""]
 	/*	http://www.writtensound.com/index.php?term=liquid	*/
 	, "styles": {
 		  "defaultColor":"#449977"
@@ -67,7 +68,8 @@ function makeItLook() {
 						var _o = document.getElementById(_pa);
 						if (_o != null ) {
 							applyStyles(_o,vars.styles.calm);
-							_o.innerHTML=vars.dryText;
+							//_o.innerHTML=vars.dryText;
+							_o.innerHTML=vars.dryText[Math.floor(Math.random() * vars.dryText.length) + 0];
 						}
 					}
 					,  vars.dryOut
@@ -114,7 +116,7 @@ function createTable() {
 	for (var i=0;i<y;i++) {
 		var tr = document.createElement("TR"); 
 		for (var e=0;e<x;e++) {
-			var text = document.createTextNode(vars.dryText); 
+			var text = document.createTextNode(vars.initText[Math.floor(Math.random() * vars.initText.length) + 0]); 
 			var td = document.createElement("TD"); 
 			td.appendChild(text);
 			td.id = 'tr'+i+'td'+e;
