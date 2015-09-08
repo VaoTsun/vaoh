@@ -20,14 +20,19 @@ app.get('/raindrops', function(req, res) {
 
 
 app.get('/', function(req, res) {
-	fs.readFile(__dirname+'/h/manitou.test.html',function (err, html){
+	var _fn = __dirname+'/h/manitou.test.html';
+	var _fn = __dirname+'/h/title.html';
+	fs.readFile(_fn,function (err, html){
         res.writeHead(200, {'Content-Type': 'text/html','Content-Length':html.length});
         res.write(html);
         res.end();
 		//response.send(html);
 	})
+	/*
+	*/
 
 });
+
 app.get('/*.*', function(req, res) {
 	var extension = req.url.split('.')[req.url.split('.').length-1];
 	var permit = false;
