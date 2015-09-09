@@ -33,7 +33,8 @@ function shortLink (req,res) {
 	if ( go.module == '/db') {
 		fs.readFile(__dirname+'/q/'+req.query.q+'.sql',function (err, sql){
 			if (err) {
-				return returnHtml(String(err),res);
+				return console.log(err);
+				//return returnHtml(String(err),res);
 			}
 			var dbe = require(__dirname+'/e/db.js');
 			dbe.simpleQuery(String(sql),function() {
