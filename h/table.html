@@ -1,0 +1,95 @@
+<html lang="en">
+<head>
+</head>
+
+<body>
+	<div id="o">
+	</div>
+</body>
+
+<script>
+
+function loadJSON(path, success, error, app) {
+	var xhr = new XMLHttpRequest();
+	var data;
+	var vars = {};
+	xhr.onreadystatechange = function()
+	{
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+			if (xhr.status === 200) {
+				if (success)
+					success(xhr.responseText, app);
+			} else {
+				if (error)
+					error(xhr);
+			}
+		}
+	};
+	xhr.open("GET", path, true);
+	xhr.send();
+}
+
+
+	loadJSON(
+		  window.location.origin + '/db?q=last9'
+		, function(a,b) {
+			data = JSON.parse(a).rows;
+			createTable();
+		  }
+		, function(a,b,err) {console.log(a,b,err);}
+		, null
+	);
+	function htmlise() {
+		var k = Object.keys(data);
+		for (var i=0;i<k.length;i++) {
+			
+		}
+		console.log(data);
+	}
+
+function createTable() {
+	var k = Object.keys(data);
+	var rk = Object.keys(data[0])
+	//console.log(data,k,rk);
+
+	var table = document.createElement("TABLE"); 
+	
+	var tr = document.createElement("TR"); 
+	for (var e=0;e<rk.length;e++) {
+		var text = document.createTextNode(rk[e]); 
+		var td = document.createElement("TD"); 
+		td.appendChild(text);
+		td.id = 'hdr'+i+'td'+e;
+		td.style.border='1px orange solid';
+		td.style.backgroundColor='brown';
+		td.style.color='white';
+		//applyStyles(td,vars.styles.init);
+		tr.appendChild(td); 
+	}
+	table.appendChild(tr); 
+	
+	for (var i=0;i<k.length;i++) {
+		var tr = document.createElement("TR"); 
+		for (var e=0;e<rk.length;e++) {
+			var text = document.createTextNode(data[k[i]][rk[e]]); 
+			var td = document.createElement("TD"); 
+			td.appendChild(text);
+			td.id = 'tr'+i+'td'+e;
+			td.style.border='1px brown solid';
+			//applyStyles(td,vars.styles.init);
+			tr.appendChild(td); 
+		}
+		table.appendChild(tr); 
+	}
+	document.body.appendChild(table);
+	return true;	
+}
+
+</script>
+
+</html>
+
+
+
+
+
