@@ -62,7 +62,7 @@ app.get('/*', function(req, res) {
 	go.module = req.url.split('?')[0];
 
 	if ( req.connection.remoteAddress != '127.0.0.1' ) {
-		q.Q("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
+		q.simpleQuery("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
 			return null;
 		});
 	}
