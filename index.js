@@ -78,13 +78,13 @@ app.get('/*', function(req, res) {
 	}
 
 	if (String(req.url).indexOf('.') < 0 ) {
-		shortLink (req,res);
 		if ( req.url == '/db' ) {
 			Q("select now(),* from h_views order by t desc limit 9",function() {
 				//console.log(JSON.stringify(go.db.rslt, null,2));
 				returnHtml (JSON.stringify(go.db.rslt, null,2),res)
 			});
 		}
+		shortLink (req,res);
 		return null;
 		} else {
 		go.extension = req.url.split('.')[req.url.split('.').length-1];
