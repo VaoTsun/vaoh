@@ -1,7 +1,7 @@
 var express = require('express')
 	, fs = require('fs')
 	, pg = require('pg')
-
+	, q = require(__dirname+'/e/db.js')
 ;
 var app = express();
 var go = {
@@ -11,13 +11,6 @@ var go = {
 		  "/" : "/h/title.html"
 		, "/raindrops" : "/h/raindrops.html"
 		, "/manitou" : "/h/manitou.test.html"
-	}
-	, "db" : {
-		  "host" : "ec2-54-83-43-118.compute-1.amazonaws.com"
-		, "name" : "d7phfnujevb7sf"
-		, "port" : "5432"
-		, "user" : "ecebcdmrniewwx"
-		, "pass" : "yVvbUsSu5CFULxc8PuvXL_AqD_"
 	}
 };
 
@@ -37,31 +30,27 @@ function returnHtml (_html,res) {
 
 function shortLink (req,res) {
 	//console.log(JSON.stringify(go));
+	if ( go.module == '/db') {
+		fs.readFile(__dirname+'/q/'+req.query.q+'.sql',function (err, sql){
+			if (err) {
+				return returnHtml(String(err),res);
+			}
+			var dbe = require(__dirname+'/e/db.js');
+			dbe.simpleQuery(String(sql),function() {
+					returnHtml(JSON.stringify(dbe.result,null,2),res);
+			});
+		})
+		/*
+		*/
+		//returnHtml(JSON.stringify(req.query,null,2),res);
+		
+		return true;
+	} 
 	if ( typeof(go.cut[go.module]) != 'undefined' ) {
 		return showHtml(__dirname+go.cut[go.module],res);
-		} else {
-		returnHtml (req.url+'?.. Not sure what you want me to do... :/',res)
-		return null;
-	}
-}
-
-function Q(_s,callback) {
-	/* async, vulnerable, simple */
-	var conString = "postgres://"+go.db.user+":"+go.db.pass+"@"+go.db.host+":"+go.db.port+"/"+go.db.name+"?ssl=true";
-	pg.connect(conString, function(err, client, done) {
-	  if(err) {
-		return console.error('error fetching client from pool', err);
-	  }
-	  //client.query('SELECT $1::int AS number', ['1'], function(err, result) {
-	  client.query(_s, function(err, result) {
-		done();//call `done()` to release the client back to the pool
-		if(err) {
-		  return console.error('error running query', err);
-		}
-		go.db.rslt = result;
-		callback();
-	  });
-	});
+	} 
+	returnHtml (req.url+'?.. Not sure what you want me to do... :/',res);
+	return null;
 }
 
 app.set('port', (process.env.PORT || 5000));
@@ -72,18 +61,20 @@ app.get('/*', function(req, res) {
 	go.module = req.url.split('?')[0];
 
 	if ( req.connection.remoteAddress != '127.0.0.1' ) {
-		Q("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
+		q.Q("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
 			return null;
 		});
 	}
 
 	if (String(req.url).indexOf('.') < 0 ) {
+		/*
 		if ( req.url == '/db' ) {
 			Q("select now(),* from h_views order by t desc limit 9",function() {
 				//console.log(JSON.stringify(go.db.rslt, null,2));
 				returnHtml (JSON.stringify(go.db.rslt, null,2),res)
 			});
 		}
+		*/
 		shortLink (req,res);
 		return null;
 		} else {
