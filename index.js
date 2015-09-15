@@ -1,14 +1,31 @@
 var express = require('express')
 	, fs = require('fs')
 	, pg = require('pg')
-	, q = require(__dirname+'/e/db.js')
+	//, q = require(__dirname+'/e/db.js')
 ;
 var app = express();
+var types = require('pg').types
+types.setTypeParser(20, function(val) {
+  //remember: all values returned from the server are either NULL or a string
+  return val === null ? null : parseInt(val)
+})
+var moment = require('moment')
+var TIMESTAMPTZ_OID = 1114
+var TIMESTAMP_OID = 1184
+var parseFn = function(val) {
+   return val === null ? null : moment(val)
+}
+types.setTypeParser(TIMESTAMPTZ_OID, parseFn)
+types.setTypeParser(TIMESTAMP_OID, parseFn)
+
+
+
 var go = {
 	  "module" : ""
 	, "extension" : ""
 	, "cut" : {
 		  "/" : "/h/title.html"
+		, "/clicks" : "/h/table.html"
 		, "/raindrops" : "/h/raindrops.html"
 		, "/manitou" : "/h/manitou.test.html"
 	}
