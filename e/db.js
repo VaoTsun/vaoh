@@ -25,6 +25,7 @@ function Q(_s,callback) {
 		  return console.error('error running query', err);
 		}
 		dbe.result = result;
+		//console.log(JSON.parse(result.setEncoding('utf8');));
 		callback();
 	  });
 	});

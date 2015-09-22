@@ -1,3 +1,5 @@
+var globalStartTime = new Date().getTime();
+var data;
 var v = {
 	  "loaded" : false
 	, "loadingStep" : 50
@@ -8,7 +10,9 @@ var v = {
 		, "calculationTabPositions": {"top":"top","middle":"middle","bottom":"bottom"}
 		, "highlightPosition" : true
 		, "monochromeZebra" : true
+		, "skipPreAgg" : false
 		, "thousandSeparator" : ","
+		, "tooManyRows" : 2000
 	}
 	, "dataProp" : {
 		  "numeric" : function () { return {"columnName":null, "dataType": null,"sum":0,"cnt":0, "min":null,"max":null,"avg":null,"order":null}; }
@@ -17,6 +21,7 @@ var v = {
 		, "date" : function () { return {"columnName":null, "dataType": null,"cnt":0,"maxDate" : null, "minDate" : null,"order":null}; }
 		, "columns" : {}
 		, "caseSensitiveSort" : true
+		, "app" : {}
 	}
 	, "styles": {
 		  "defaultColor":"#449977"
@@ -43,15 +48,7 @@ var v = {
 			, "border-left": "1px solid grey"
 		}
 		, "headerTr" : {
-			  "opacity": 0.99
-			, "borderStyle": "solid"
-			, "borderWidth": "1px"
-			, "borderColor": "white"
-			, "backgroundColor": "blue"
-			, "color": "white"
-			, "width": "20px"
-			, "text-align" : "center"
-			, "font-size":"14px"
+			  "opacity": 0.8
 		}
 		, "dataTable" : {
 			  "borderStyle": "solid"
@@ -90,6 +87,24 @@ var v = {
 	, "prevStyles" : {}
 }
 v.dataProp.query='last9';
+v.dataProp.url = window.location.origin + '/db?q='+v.dataProp.query;
+v.dataProp.url = window.location.origin + '/h/long.json';
+var sav = IsJsonString(localStorage.getItem('v.dataProp.columns'));
+if (sav == null || Object.keys(sav).length < 1) {
+	sav=v.dataProp.columns;
+}
+
+
+String.prototype.hexDecode = function(){
+    var j;
+    var hexes = this.match(/.{1,4}/g) || [];
+    var back = "";
+    for(j = 0; j<hexes.length; j++) {
+        back += String.fromCharCode(parseInt(hexes[j], 16));
+    }
+
+    return back;
+}
 
 function applyStyles(_o,_s) {
 	var _k = Object.keys(_s);
@@ -168,6 +183,7 @@ function createCalculationsRow() {
 			this.innerHTML = jsonToDropDown(j,this.innerHTML);
 			document.getElementById('changeDefaultMethod').onchange = function () {
 				v.dataProp.columns[j.columnName].defaultMethod=this.value;
+				console.log('calc'+(j.columnNr-1),j);
 				document.getElementById('calc'+(j.columnNr-1)).innerHTML = this.value + ': ' + j[this.value];
 				localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns));
 			}
@@ -196,104 +212,71 @@ function mergeSaved(k) {	//mergeSaved('outlook')
 	}
 }
 
-function createTable() {
+function $(o) {
+	return document.getElementById(o);
+}
+
+function fillupTable() {
 	var startTime = new Date().getTime();
 	var k = Object.keys(data);
 	var rk = Object.keys(data[0]);
-	mergeSaved('outlook')
-	//console.log(data,k,rk);
-	
+	mergeSaved('outlook');
 	defineDataTypes();
-
-	var table = document.createElement("TABLE"); 
-	table.style.borderCollapse = "collapse";
-	if ( v.outlook.calculationTabPosition == "top" ) {
-		table.appendChild(createCalculationsRow());
-	}
-	
-	//Header - column names and types etc
-	var tr = document.createElement("TR");
-		tr.id = "header";
-		applyStyles(tr,v.styles.headerTr);
-		var text = document.createTextNode(" "); 
-		var td = document.createElement("TD"); 
-		td.appendChild(text);
-		//applyStyles(td,v.styles.countTd);
-		tr.appendChild(td); 
+	var table = $("t_"+v.dataProp.query);
+	applyStyles($('header'),v.styles.headerTr);
+	//header style & sorting buttons from http://stackoverflow.com/questions/2701192/character-for-up-down-triangle-arrow-to-display-in-html
 	for (var e=0;e<rk.length;e++) {
-		var text = document.createTextNode(rk[e]);
-		var td = document.createElement("TD"); 
-		//td.title = v.dataProp.columns[rk[e]].dataType; 
-		//td.appendChild(text);
-		td.id = 'hdr'+e;
-		td.innerHTML =  rk[e]
+		$('hdr'+(e)).innerHTML =  rk[e]
 			+ '&nbsp;'
 			+ '<sup style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'asc\');" >&#9650;</sup>'
 			+ '<sub style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'desc\');" >&#9660;</sub>'
-		/*
-			http://stackoverflow.com/questions/2701192/character-for-up-down-triangle-arrow-to-display-in-html
-		*/
-		//td.style.color = 'white';
-		applyStyles(td,v.styles.headerTr);
-		tr.appendChild(td); 
+		applyStyles($('hdr'+e),v.styles.headerTr);
 	}
-	table.appendChild(tr); 
-	if ( v.outlook.calculationTabPosition == "middle" ) {
-		table.appendChild(createCalculationsRow());
-	}
-	
+
 	//Data itself
 	for (var i=0;i<k.length;i++) {
-		var tr = document.createElement("TR"); 
-		tr.id="tr_"+i;
-			var text = document.createTextNode(i+1); 
-			var td = document.createElement("TD"); 
-			td.appendChild(text);
-			applyStyles(td,v.styles.countTd);
-			tr.appendChild(td); 
 		for (var e=0;e<rk.length;e++) {
 			var val = data[k[i]][rk[e]];
-			if (v.dataProp.columns[rk[e]].dataType == 'numeric' || v.dataProp.columns[rk[e]].dataType == 'float') {
-				v.calcBuff[rk[e]].push(parseFloat(val));
-				v.dataProp.columns[rk[e]].sum += parseFloat(val);
-				v.dataProp.columns[rk[e]].cnt += 1;
-			}
+			if ( !v.outlook.skipPreAgg) {
+				if (v.dataProp.columns[rk[e]].dataType == 'numeric' || v.dataProp.columns[rk[e]].dataType == 'float') {
+					v.calcBuff[rk[e]].push(parseFloat(val));
+					v.dataProp.columns[rk[e]].sum += parseFloat(val);
+					v.dataProp.columns[rk[e]].cnt += 1;
+				}
 			
-			if (v.dataProp.columns[rk[e]].dataType == 'date') {
+				if (v.dataProp.columns[rk[e]].dataType == 'date') {
 				
-				var cd = new Date(val);
-				if (v.dataProp.columns[rk[e]].minDate == null || v.dataProp.columns[rk[e]].minDate > cd) {
-					v.dataProp.columns[rk[e]].minDate = cd;
+					var cd = new Date(val);
+					if (v.dataProp.columns[rk[e]].minDate == null || v.dataProp.columns[rk[e]].minDate > cd) {
+						v.dataProp.columns[rk[e]].minDate = cd;
+					}
+					if (v.dataProp.columns[rk[e]].maxDate == null || v.dataProp.columns[rk[e]].maxDate < cd) {
+						v.dataProp.columns[rk[e]].maxDate = cd;
+					}
+					val = DateFormat(new Date(val),'YYYY-MM-DD HH24:MI');
 				}
-				if (v.dataProp.columns[rk[e]].maxDate == null || v.dataProp.columns[rk[e]].maxDate < cd) {
-					v.dataProp.columns[rk[e]].maxDate = cd;
-				}
-				val = DateFormat(new Date(val),'YYYY-MM-DD HH24:MI');
-			}
 			
-			if (v.dataProp.columns[rk[e]].dataType == 'string') {
+				if (v.dataProp.columns[rk[e]].dataType == 'string') {
 				
-				if (v.dataProp.columns[rk[e]].maxLength == null || val.length > parseInt(v.dataProp.columns[rk[e]].maxLength)) {
-					v.dataProp.columns[rk[e]].maxLength = val.length;
+					if (v.dataProp.columns[rk[e]].maxLength == null || val.length > parseInt(v.dataProp.columns[rk[e]].maxLength)) {
+						v.dataProp.columns[rk[e]].maxLength = val.length;
+					}
+					if (v.dataProp.columns[rk[e]].minLength == null || val.length <= parseInt(v.dataProp.columns[rk[e]].minLength)) {
+						v.dataProp.columns[rk[e]].minLength = val.length; 
+					}
+					if (v.calcBuff[rk[e]].indexOf(val) < 0) {
+						v.calcBuff[rk[e]].push((val));
+					}
+					v.dataProp.columns[rk[e]].cnt += 1;
 				}
-				if (v.dataProp.columns[rk[e]].minLength == null || val.length <= parseInt(v.dataProp.columns[rk[e]].minLength)) {
-					v.dataProp.columns[rk[e]].minLength = val.length; 
-				}
-				if (v.calcBuff[rk[e]].indexOf(val) < 0) {
-					v.calcBuff[rk[e]].push((val));
-				}
-				v.dataProp.columns[rk[e]].cnt += 1;
-			}
 			
-			var text = document.createTextNode(val); 
-						
-			var td = document.createElement("TD"); 
+				} else {
+				val = 	data[k[i]][rk[e]];
+			}
+			var td = $('_'+i+'_'+e); 
 			td.title = 'original value: ' + data[k[i]][rk[e]]; 
 
-			td.appendChild(text);
-			td.id = 'tr'+i+'td'+e;
-			td.style.border='1px brown solid';
-			td.style.color='black';
+			td.innerHTML = val;
 			if (v.outlook.monochromeZebra) {
 				if (parseInt(i/2) == parseFloat(i/2)) {
 					td.className="light";
@@ -325,33 +308,79 @@ function createTable() {
 					}
 				}
 			}
+		}
+	}
+	
+	if ( v.outlook.calculationTabPosition == "middle" ) {
+		if ($('calculations')) {
+    		$('calculations').parentNode.removeChild($('calculations'));
+		}
+		table.insertBefore(createCalculationsRow(),$('header').parentElement.children[1]);
+	}
+	fillInCalculationsRow();
+
+	
+	var endTime = new Date().getTime();
+	v.dataProp.app.timeHtmlProcess = ( new Date().getTime() - startTime );
+	document.getElementById('calc_td').title = JSON.stringify(v.dataProp.app,null,2);
+
+	console.log(v.dataProp.columns);
+	//localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns,null,2))
+
+	return true;	
+}
+
+function createHtmlTable() {
+	var startTime = new Date().getTime();
+	var k = Object.keys(data);
+	var rk = Object.keys(data[0]);
+	var table = document.createElement("TABLE"); 
+	table.id = "t_"+v.dataProp.query;
+	document.getElementById("o").innerHTML='';
+	document.getElementById("o").appendChild(table);
+	table.onclick = function () {
+		v.dataProp.clickTime = new Date().getTime();
+	}
+	var header = document.createElement("TR"); 
+	header.id = "header";
+	var th = document.createElement("TH");
+	th.innerHTML='+';
+	header.appendChild(th); 
+	for (var e=0;e<rk.length;e++) {
+		var th = document.createElement("TH");
+		th.innerHTML=rk[e];
+		th.id = 'hdr'+e;
+		header.appendChild(th); 
+	}
+	table.appendChild(header); 
+	
+/*
+	var calculationTr = document.createElement("TR"); 
+	calculationTr.id='calculationTr';
+	for (var e=0;e<(rk.length + 1);e++) {
+		var td = document.createElement("TD");
+		td.innerHTML='calcs';
+		calculationTr.appendChild(td); 
+	}
+	table.appendChild(calculationTr); 
+*/	
+	for (var i=0;i<k.length;i++) {
+		var tr = document.createElement("TR"); 
+		tr.id="tr_"+i;
+		var text = document.createTextNode(i+1); 
+		var td = document.createElement("TD"); 
+		td.appendChild(text);
+		tr.appendChild(td); 
+		for (var e=0;e<rk.length;e++) {
+			var td = document.createElement("TD");
+			td.id = '_'+i+'_'+e;
 			tr.appendChild(td); 
 		}
 		table.appendChild(tr); 
 	}
-	
-	if ( v.outlook.calculationTabPosition == "bottom" ) {
-		table.appendChild(createCalculationsRow());
-	}
-
-	document.getElementById("o").innerHTML='';
-	document.getElementById("o").appendChild(table);
-
-	fillInCalculationsRow();
-	
-	var endTime = new Date().getTime();
-	v.dataProp.dataProcessingTime = ( new Date().getTime() - startTime );
-	var rp = {
-			  query: v.dataProp.query
-			, jsonLoadingTime : v.dataProp.jsonLoadingTime
-			, dataProcessingTime : v.dataProp.dataProcessingTime
-		}
-	;
-	document.getElementById('calc_td').title = JSON.stringify(rp,null,2);
-	
-	//console.log(v.dataProp);
-	return true;	
+	v.dataProp.app.HtmlStructurePrepare = ( new Date().getTime() - startTime );
 }
+
 
 function fillInCalculationsRow() {
 	var rk = Object.keys(data[0]);
@@ -427,7 +456,7 @@ function showWaiting(c) {
 		return null;
 	}
 	v.loadingTime += v.loadingStep;
-	document.getElementById("o").innerHTML='' + ((c*(1000/v.loadingStep))).toFixed(1);
+	document.getElementById("s").innerHTML='' + ((c*(1000/v.loadingStep))).toFixed(1);
 	setTimeout(
 		function() {
 			showWaiting(c+1);}
@@ -436,18 +465,7 @@ function showWaiting(c) {
 }
 
 function onLoad() {
-	showWaiting(0);
-	loadJSON(
-		  window.location.origin + '/db?q='+v.dataProp.query
-		, function(a,b) {
-			data = JSON.parse(a).rows;
-			createTable();
-			v.loaded = true;
-			//console.log(b);
-		  }
-		, function(a,b,err) {console.log(a,b,err);}
-		, null
-	);
+	console.log('loaded:' ,new Date().getTime() - globalStartTime);
 }
 
 function jsonToDropDown(j,v) {
@@ -543,16 +561,23 @@ Array.prototype.min = function() {
 
 function initiateColumn(e,t) {
 	var rk = Object.keys(data[0]);
-	var sav = JSON.parse(localStorage.getItem('v.dataProp.columns'));
 	if ( typeof(sav[rk[e]]) == 'undefined') {
-		sav[rk[e]]=v.dataProp[t];
+		sav[rk[e]] = new v.dataProp[t];
 	}
-	v.dataProp.columns[rk[e]] = v.dataProp[t];
+	v.dataProp.columns[rk[e]] = sav[rk[e]];
+	//console.log(v.dataProp.columns[rk[e]]);
+	//v.dataProp.columns = sav;
+	//console.log(sav[rk[e]]);
+	//mergeSaved('dataProp');
+	//v.dataProp.columns[rk[e]] = v.dataProp[t];
 	v.dataProp.columns[rk[e]].dataType = t;
 	v.dataProp.columns[rk[e]].columnName = rk[e];
-	v.dataProp.columns[rk[e]].columnNr = e-1;
+	v.dataProp.columns[rk[e]].columnNr = e+1;
 	v.dataProp.columns[rk[e]].defaultMethod = sav[rk[e]].defaultMethod;
 	v.dataProp.columns[rk[e]].order = sav[rk[e]].order;
+	v.dataProp.columns[rk[e]].columnName = rk[e];
+	//localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns))
+	//console.log(v.dataProp.columns,rk[e]);
 }
 
 function DateFormat(d,format) {
@@ -657,7 +682,10 @@ function sortResults(o,a) {
 	/*
 		added .toLowerCase() for case insensitive comparison as it seems expected
 		maybe NULL sorting should be parametrized
+		maybe sorting should be indexed & mapped like https://en.wikipedia.org/wiki/Schwartzian_transform
 	*/
+	var startTime = new Date().getTime();
+	
 	this.caseSensitive = function(s) { 
 		if (v.dataProp.caseSensitiveSort) {
 			return s.toLowerCase();
@@ -668,7 +696,6 @@ function sortResults(o,a) {
 	var ak = Object.keys(v.dataProp.columns);
 	v.dataProp.columns[ak[o.split('hdr')[1]]].order = a;
 	var c = v.dataProp.columns[ak[o.split('hdr')[1]]];
-	
 	
 	data = data.sort(function(a, b) {
 		if (c.order == 'asc') {
@@ -693,16 +720,94 @@ function sortResults(o,a) {
 			}
 		}
 	});
-	createTable();
+/*
+*/
+	var endTime = new Date().getTime();
+	v.dataProp.app.dataSortingTime = ( new Date().getTime() - startTime );
+	//console.log(v.dataProp.dataSortingTime);
 	
-	//console.log(o,a,c);
+	fillupTable();
 	return true;
 	}
 	
 
+var prep = function () {
+	console.log('initiated:' ,new Date().getTime() - globalStartTime);
+	data = new Array();
+	data[0] = new Array();
+	data[1] = new Array();
+	data[2] = new Array();
+	data[0]["one"] = 'polk';
+	data[1]["one"] = 'polk';
+	data[2]["one"] = 'polk';
+	createHtmlTable();
+}
 
 
 
+showWaiting(0);
+prep();
+loadJSON(
+	  v.dataProp.url
+	, function(a,b) {//console.log(b);
+		v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
+		
+		data = JSON.parse(a).rows;
+		
+		createHtmlTable();
+		bcl();
+	  }
+	, function(a,b,err) {console.log(a,b,err);}
+	, 23
+);
 
+function bcl() {
+	v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
+	console.log(data.length);	//return true;
+	var k = Object.keys(data[0]);
+	var UtfFound = false;
+	for (var i=0;i<k.length;i++) {
+		if (k[i].slice(-4) == ':utf') {
+			UtfFound = true;
+		}
+	
+	}
+	if (UtfFound == true) {
+		var utfTime = new Date().getTime();
+		for (var i=0;i<data.length;i++) {
+			for (var e=0;e<k.length;e++) {
+				if (k[e].slice(-4) == ':utf') {
+					data[i][k[e]]=data[i][k[e]].hexDecode();
+				}
+			}
+		}
+		v.dataProp.app.timeUtfDecode = (new Date().getTime() - utfTime);
+	}
+	v.dataProp.app.timeJsonParse = ( new Date().getTime() - globalStartTime - v.dataProp.app.timeJsonSrc);
+	if (data.length > v.outlook.tooManyRows) {
+		document.getElementById("s").innerHTML = 'disabling candies - data is too big ('+data.length+')';
+		v.outlook.monochromeZebra = false;
+		v.outlook.highlightPosition = false;
+		v.outlook.skipPreAgg = true;
+		localStorage.setItem('v.outlook',JSON.stringify(v.outlook,null,2));
+	}
+	fillupTable();
+	v.loaded = true;
+	v.dataProp.app.total = ( new Date().getTime() - globalStartTime);
+	console.log(v.dataProp.app);
+}
 
 window.onload = onLoad();
+
+
+
+function IsJsonString(str) {
+	var e = new Object({"exc" : "not json"});
+    try {
+        var r = JSON.parse(str);
+    } catch (e) {console.log(e);
+        return e;
+    }
+    return r;
+}
+

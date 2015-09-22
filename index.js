@@ -9,6 +9,7 @@ types.setTypeParser(20, function(val) {
   //remember: all values returned from the server are either NULL or a string
   return val === null ? null : parseInt(val)
 })
+
 var moment = require('moment')
 var TIMESTAMPTZ_OID = 1114
 var TIMESTAMP_OID = 1184
@@ -17,8 +18,34 @@ var parseFn = function(val) {
 }
 types.setTypeParser(TIMESTAMPTZ_OID, parseFn)
 types.setTypeParser(TIMESTAMP_OID, parseFn)
+//psql -c "select typname, oid, typarray from pg_type where typtype = 'b' order by oid"
 
+/*
+	when db result contains utf stringify or smth else cuts the length or data itself...
+	so I just convirt it to hex as a bycicle
+	http://stackoverflow.com/questions/21647928/javascript-unicode-string-to-hex
+*/
+String.prototype.hexEncode = function(){
+    var hex, i;
 
+    var result = "";
+    for (i=0; i<this.length; i++) {
+        hex = this.charCodeAt(i).toString(16);
+        result += ("000"+hex).slice(-4);
+    }
+
+    return result
+}
+String.prototype.hexDecode = function(){
+    var j;
+    var hexes = this.match(/.{1,4}/g) || [];
+    var back = "";
+    for(j = 0; j<hexes.length; j++) {
+        back += String.fromCharCode(parseInt(hexes[j], 16));
+    }
+
+    return back;
+}
 
 var go = {
 	  "module" : ""
@@ -55,13 +82,31 @@ function shortLink (req,res) {
 			}
 			var dbe = require(__dirname+'/e/db.js');
 			dbe.simpleQuery(String(sql),function() {
-					returnHtml(JSON.stringify(dbe.result,null,2),res);
+			
+				var k = Object.keys(dbe.result.rows[0]);
+				var hexNeeded = false;
+				for (var e = 0; e<k.length; e++) {
+					if (k[e].slice(-4) == ':utf') {
+						hexNeeded = true;
+						console.log('utf string alerted in "'+k[e]+'" => preprocessing data internally');
+					}				
+				}
+				if (hexNeeded) {
+					console.log('utf string alerted => preprocessing data internally');
+					for (var i = 0; i<dbe.result.rows.length; i++) {
+						for (var e = 0; e<k.length; e++) {
+							if (k[e].slice(-4) == ':utf') {
+								dbe.result.rows[i][k[e]] = dbe.result.rows[i][k[e]].hexEncode();
+								//console.log(dbe.result.rows[i][k[e]].hexEncode());
+							}				
+						}
+					}
+					console.log(i + ' rows parsed');
+				}
+				
+				returnHtml(JSON.stringify(dbe.result,null,2),res);
 			});
 		})
-		/*
-		*/
-		//returnHtml(JSON.stringify(req.query,null,2),res);
-		
 		return true;
 	} 
 	if ( typeof(go.cut[go.module]) != 'undefined' ) {
