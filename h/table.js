@@ -9,10 +9,14 @@ var v = {
 		  "calculationTabPosition":"middle"
 		, "calculationTabPositions": {"top":"top","middle":"middle","bottom":"bottom"}
 		, "highlightPosition" : true
+		, "highlightTimeout" : 1000
+		, "highlightSelectedHeader" : true
 		, "monochromeZebra" : true
 		, "skipPreAgg" : false
 		, "thousandSeparator" : ","
 		, "tooManyRows" : 2000
+		, "highlightPositionMax" : 500
+		, "monochromeZebraMax" : 20000
 	}
 	, "dataProp" : {
 		  "numeric" : function () { return {"columnName":null, "dataType": null,"sum":0,"cnt":0, "min":null,"max":null,"avg":null,"order":null}; }
@@ -42,7 +46,7 @@ var v = {
 			, "backgroundColor": "black"
 			, "color": "#55ff55"
 			, "width": "20px"
-			, "whiteSpace": "nowrap"
+			, "whiteSpace": "nowrap"
 			, "font-size":"14px"
 			, "text-align": "right"
 			, "border-left": "1px solid grey"
@@ -85,15 +89,38 @@ var v = {
 
 	}
 	, "prevStyles" : {}
+	, "WorkingObjects" : {
+		 "sumSelected":[]
+		, "cssSelected":[]
+		, "insideFrame":true
+		, "slectedCells":[]
+		, "slectedCellsCss":[]
+		, "selectedSet":[]
+	}
+	, "Data" : []
 }
 v.dataProp.query='last9';
 v.dataProp.url = window.location.origin + '/db?q='+v.dataProp.query;
-v.dataProp.url = window.location.origin + '/h/long.json';
-var sav = IsJsonString(localStorage.getItem('v.dataProp.columns'));
+v.dataProp.url = window.location.origin + '/h/short.json';
+var sav = IsJsonString(localStorage.getItem('v.dataProp.columns')).obj;
+	var $_GET = {};
 if (sav == null || Object.keys(sav).length < 1) {
 	sav=v.dataProp.columns;
 }
 
+function parseGet() {
+	if(document.location.toString().indexOf('?') !== -1) {
+		var query = document.location.toString().replace(/^.*?\?/, '').split('&');
+
+		for(var i=0, l=query.length; i<l; i++)
+		{
+		   var aux = decodeURIComponent(query[i]).split('=');
+		   $_GET[aux[0]] = aux[1];
+		}
+	}
+}
+
+parseGet();
 
 String.prototype.hexDecode = function(){
     var j;
@@ -220,6 +247,7 @@ function fillupTable() {
 	var startTime = new Date().getTime();
 	var k = Object.keys(data);
 	var rk = Object.keys(data[0]);
+	var calculationsRow = createCalculationsRow();
 	mergeSaved('outlook');
 	defineDataTypes();
 	var table = $("t_"+v.dataProp.query);
@@ -235,6 +263,56 @@ function fillupTable() {
 
 	//Data itself
 	for (var i=0;i<k.length;i++) {
+		var tr = $('tr_'+i); 
+		if (v.outlook.monochromeZebra) {
+			if (parseInt(i/2) == parseFloat(i/2)) {
+				tr.className="light";
+				} else {
+				tr.className="hard";
+			}
+
+		}
+
+		if (v.outlook.highlightPositio) {
+			tr.onmouseover = function () {
+				//infoLine(JSON.stringify(this.id));
+				v.prevStyles.bg = this.style.cssText;
+				v.prevStyles.bgid = this.id;
+				//this.style.cssText = 'color:orange;background-color: purple; border-bottom:thin double red;';
+				v.prevStyles[this.id] = {};
+				v.prevStyles[this.id].ple = this.id;
+				v.prevStyles[this.id].pleb = true;
+				v.prevStyles.plo = this.id;
+				setTimeout(function () {
+					if (v.prevStyles.plo) {
+						//$(v.prevStyles.ple).style.color = 'blue';
+						applyStyles($(v.prevStyles.plo),v.styles.highLight);
+					}
+				},v.outlook.highlightTimeout);
+
+				
+				for (var i=0;i<this.children.length;i++) {
+					var id = this.children[i];
+					v.prevStyles[id.id] = id.style.cssText;
+					id.style.cssText =  'color:red;';
+				}
+			}
+			tr.onmouseout = function () {
+				v.prevStyles[this.id].pleb = false;
+				infoLine(JSON.stringify(this.id));
+				document.getElementById(v.prevStyles.bgid).style.cssText = v.prevStyles.bg;
+				v.prevStyles.bg = this.style.cssText;
+				this.style.cssText = v.prevStyles.bg;
+				
+				for (var i=0;i<this.children.length;i++) {
+					var id = this.children[i];
+					id.style.cssText =  v.prevStyles[id.id];
+					v.prevStyles[id.id] = id.style.cssText;
+					v.prevStyles[id.id] = id.style.cssText;
+				}
+			}
+		}
+
 		for (var e=0;e<rk.length;e++) {
 			var val = data[k[i]][rk[e]];
 			if ( !v.outlook.skipPreAgg) {
@@ -274,40 +352,8 @@ function fillupTable() {
 				val = 	data[k[i]][rk[e]];
 			}
 			var td = $('_'+i+'_'+e); 
-			td.title = 'original value: ' + data[k[i]][rk[e]]; 
-
 			td.innerHTML = val;
-			if (v.outlook.monochromeZebra) {
-				if (parseInt(i/2) == parseFloat(i/2)) {
-					td.className="light";
-					} else {
-					td.className="hard";
-				}
-			}
-			if (v.outlook.highlightPosition) {
-				td.onmouseover = function () {
-					var c = document.getElementById('hdr'+this.id.split('td')[1]);
-					v.prevStyles[c.id] = c.style.cssText;
-					v.prevStyles[this.id] = this.style.cssText;
-					for (var i=0;i<this.parentElement.children.length;i++) {
-						var id = this.parentElement.children[i];
-						v.prevStyles[id.id] = id.style.cssText;
-
-						id.style.borderBottom = 'thin double red';
-						applyStyles(id,v.styles.highLight);
-					}
-					applyStyles(c,v.styles.highLight);
-					this.style.color = "white";
-				}
-				td.onmouseout = function () {
-					var c = document.getElementById('hdr'+this.id.split('td')[1]);
-					c.style.cssText = v.prevStyles[c.id];
-					for (var i=0;i<this.parentElement.children.length;i++) {
-						var id = this.parentElement.children[i];
-						id.style.cssText =  v.prevStyles[id.id];
-					}
-				}
-			}
+			tdEvents(td);
 		}
 	}
 	
@@ -315,7 +361,7 @@ function fillupTable() {
 		if ($('calculations')) {
     		$('calculations').parentNode.removeChild($('calculations'));
 		}
-		table.insertBefore(createCalculationsRow(),$('header').parentElement.children[1]);
+		table.insertBefore(calculationsRow,$('header').parentElement.children[1]);
 	}
 	fillInCalculationsRow();
 
@@ -323,10 +369,6 @@ function fillupTable() {
 	var endTime = new Date().getTime();
 	v.dataProp.app.timeHtmlProcess = ( new Date().getTime() - startTime );
 	document.getElementById('calc_td').title = JSON.stringify(v.dataProp.app,null,2);
-
-	console.log(v.dataProp.columns);
-	//localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns,null,2))
-
 	return true;	
 }
 
@@ -353,17 +395,7 @@ function createHtmlTable() {
 		header.appendChild(th); 
 	}
 	table.appendChild(header); 
-	
-/*
-	var calculationTr = document.createElement("TR"); 
-	calculationTr.id='calculationTr';
-	for (var e=0;e<(rk.length + 1);e++) {
-		var td = document.createElement("TD");
-		td.innerHTML='calcs';
-		calculationTr.appendChild(td); 
-	}
-	table.appendChild(calculationTr); 
-*/	
+
 	for (var i=0;i<k.length;i++) {
 		var tr = document.createElement("TR"); 
 		tr.id="tr_"+i;
@@ -374,6 +406,7 @@ function createHtmlTable() {
 		for (var e=0;e<rk.length;e++) {
 			var td = document.createElement("TD");
 			td.id = '_'+i+'_'+e;
+			td.className='noselect';
 			tr.appendChild(td); 
 		}
 		table.appendChild(tr); 
@@ -659,24 +692,6 @@ function numberWithCommas(x) {
 	}
 	return x.toString();
 }
-
-	function highlightByClassifiedIds(k,v,i) {
-		/* 
-			if value can be id of classifier => we can separate rows visually
-			should check only if order by is on current column
-		*/
-		if (typeof(v)=='undefined' || v==null) {
-			return false;
-		}
-		if (Dcolumn == k) {
-			if (typeof(seen_ids[v])=='undefined') {
-				seen_ids[v]=i;
-				seen_idsi[i]=v;
-				colorGlobal[v]=$('#tr_'+i).css('background-color');
-				colorGlobal[v]=shadeRGBColor(colorGlobal[v], -0.1)
-			}
-		}
-	}
 	
 function sortResults(o,a) {
 	/*
@@ -761,6 +776,11 @@ loadJSON(
 	, 23
 );
 
+function infoLine(str) {
+	var c = IsJsonString(str).string;
+	document.getElementById("s").innerHTML = c;
+}
+
 function bcl() {
 	v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
 	console.log(data.length);	//return true;
@@ -783,14 +803,27 @@ function bcl() {
 		}
 		v.dataProp.app.timeUtfDecode = (new Date().getTime() - utfTime);
 	}
-	v.dataProp.app.timeJsonParse = ( new Date().getTime() - globalStartTime - v.dataProp.app.timeJsonSrc);
+	v.dataProp.app.timeJsonParse = ( new Date().getTime() - globalStartTime - v.dataProp.app.timeJsonSrc);// console.log(data.length > v.outlook.tooManyRows);
 	if (data.length > v.outlook.tooManyRows) {
-		document.getElementById("s").innerHTML = 'disabling candies - data is too big ('+data.length+')';
-		v.outlook.monochromeZebra = false;
-		v.outlook.highlightPosition = false;
+		infoLine('disabling candies - data is too big ('+data.length+')');
 		v.outlook.skipPreAgg = true;
-		localStorage.setItem('v.outlook',JSON.stringify(v.outlook,null,2));
+		} else {
+		v.outlook.skipPreAgg = false;
 	}
+	
+	if (data.length > v.outlook.highlightPositionMax /* || globaly disabled in preferences */) {
+		v.outlook.highlightPosition = false;
+		} else {
+		v.outlook.highlightPosition = true;
+	}
+	if (data.length > v.outlook.monochromeZebraMax /* || globaly disabled in preferences */) {
+		v.outlook.monochromeZebra = false;
+		} else {
+		v.outlook.monochromeZebra = true;
+	}
+	
+	localStorage.setItem('v.outlook',JSON.stringify(v.outlook,null,2));
+	
 	fillupTable();
 	v.loaded = true;
 	v.dataProp.app.total = ( new Date().getTime() - globalStartTime);
@@ -802,12 +835,155 @@ window.onload = onLoad();
 
 
 function IsJsonString(str) {
-	var e = new Object({"exc" : "not json"});
+	var m = new Object({"exc" : "not json","string":str});
     try {
         var r = JSON.parse(str);
-    } catch (e) {console.log(e);
-        return e;
+    } catch (e) {//console.log(e);
+        return m;
     }
-    return r;
+    return new Object({"obj":r,"string":JSON.stringify(str,null,2)});
 }
 
+function d(i) {
+	if (typeof(i) == 'undefined') {
+		console.log(' Error',i);
+		return false;
+	}
+	var k = Object.keys(data[0]);
+	var row = parseInt(i.split('_')[1]) - 0;
+	var col = k[parseInt(i.split('_')[2]) + 0];
+	var r = new Object({"originalValue" : data[row][col], "prop" : v.dataProp.columns[col], "kWidth":k.length});
+	return r;
+}
+
+function tdEvents(o) {
+	if (v.dataProp.skipEvents) {
+		return false;
+	}
+	o.onmouseover = function () {
+		$('dbg_short').innerText = d(o.id).prop.dataType + ': ' + d(o.id).originalValue;
+		dragForSum(o.id);
+	}
+	o.onmousedown = function() {
+		startSelectingColumn(o.id);
+		}
+	;
+	o.onmouseup = function() {
+			var a = v.WorkingObjects.slectedCells;
+			var k = Object.keys(a);
+			for (var i=0;i<k.length;i++) {
+				$(a[k[i]]["id"]).style.cssText('opacity','1');
+				//$(a[k[i]]["id"]).style.cssText('color',v.WorkingObjects.slectedCellsCss[a[k[i]]["id"]]);
+			}		
+			v.WorkingObjects.slectedCells = [];
+		}
+	;
+	o.dblclick = function() {
+			$(this).removeClass( "noselect" );
+			selection = window.getSelection();        
+			range = document.createRange();
+			range.selectNodeContents(this);
+			selection.removeAllRanges();
+			selection.addRange(range);
+
+		}
+	;
+}
+
+function startSelectingColumn (ind) {	//dropping previous selection on next
+	
+	var o = v.WorkingObjects.selectedSet;
+	var k = Object.keys(o);
+	for (var i=0;i<k.length;i++) {
+		$(o[k[i]]).style.borderLeft = '';
+		$(o[k[i]]).style.borderRight = '';
+		$(o[k[i]]).style.backgroundImage = '';
+		$(o[k[i]]).classList.remove('selectTd');
+	}
+	v.WorkingObjects.slectedStart=ind;
+}
+
+
+
+	function dragForSum(o) {
+		if (!detectLeftButton()) {
+			return false;
+		}
+		
+		if (v.outlook.highlightSelectedHeader) {
+			/* remove class for all columns applying i to selected only */
+			for (var i =0;i< d(o).kWidth;i++) {
+				$('hdr'+i).classList.remove('selectHdr');
+			}
+			$('hdr'+(d(o).prop.columnNr -1)).classList.add('selectHdr');
+		}
+		
+		/*
+		
+		
+		if (v.WorkingObjects.selectedSet.indexOf(v.WorkingObjects.slectedStart) < 0 ){
+			v.WorkingObjects.selectedSet.push(v.WorkingObjects.slectedStart);
+			$(v.WorkingObjects.slectedStart).classList.add('selectTd');
+		}
+		*/
+
+		
+		var from = parseInt(v.WorkingObjects.slectedStart.split('_')[1]);
+		var till = parseInt(o.split('_')[1]);
+		var coll = parseInt(o.split('_')[2]);
+		var summ = 0;
+		var db = ' ';
+		
+		
+		for (var i = 0; i < v.WorkingObjects.selectedSet.length; i++) {
+			$(v.WorkingObjects.selectedSet[i]).classList.remove('selectTd');
+		}
+		
+		for (var i=Math.min(from,till);i<= (Math.abs(from-till)+Math.min(from,till)) ;i++) {
+			var it = String('_'+i+'_'+coll);
+			v.WorkingObjects.selectedSet.push(it);
+			$(it).classList.add('selectTd');
+			if (d(it).prop.dataType == 'float' || d(it).prop.dataType == 'numeric') {
+				summ +=parseFloat(d(it).originalValue);
+				db += '    ['+d(it).originalValue+']'
+			}
+			
+		}
+		//console.log(v.WorkingObjects.selectedSet);
+		
+		var _mesg = ''
+			+ 'from: ' + (1+ Math.min(from,till)) + ' to ' + (1+ Math.max(from,till))
+			+ '. <b>count: ' + (Math.abs(from-till)+1) + '</b>, column: "' + d(o).prop.columnName + '" ' 
+			+ ' sum: <b title="'+ db+'">' + numberWithCommas(summ.toFixed(parseInt($_GET["Dec"]))) +'</b>'
+			+ db
+		;
+		infoLine(_mesg);
+		
+		
+		
+	}
+	
+	function detectLeftButton(evt) {
+		evt = evt || window.event;
+		var button = evt.which || evt.button;
+		return button == 1;
+	}
+
+	function highlightByClassifiedIds(k,v,i) {
+		/* 
+			if value can be id of classifier => we can separate rows visually
+			should check only if order by is on current column
+		*/
+		if (typeof(v)=='undefined' || v==null) {
+			return false;
+		}
+		if (Dcolumn == k) {
+			if (typeof(seen_ids[v])=='undefined') {
+				seen_ids[v]=i;
+				seen_idsi[i]=v;
+				colorGlobal[v]=$('#tr_'+i).style.cssText('background-color');
+				colorGlobal[v]=shadeRGBColor(colorGlobal[v], -0.1)
+			}
+		}
+	}
+	

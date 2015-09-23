@@ -11,6 +11,15 @@
 		}
 		.light {background-color:#eedd99;}
 		.hard {background-color:#eeeded;}
+		.selectHdr {
+			border-bottom: 4px orange solid
+			; background-color:#228833
+		}
+		.selectTd {
+			  border-left : 2px orange solid
+			; border-right: 2px orange solid
+			; background-image: url(i/r.png)
+		}
 		select {background-color: white;}
 		
 		table {
@@ -66,6 +75,13 @@
 			user-select: none;
 		
 		}
+		/*
+		tr:hover{
+			background-color: purple; 
+			border-bottom: 2px green solid;		  
+			z-index: 99; 
+		}
+		*/
 /*
 		}
 		td, th {
@@ -93,8 +109,13 @@
 
 <body>
 	LISTEN channel, a na postgres tablicu trigger to NOTIFY channel on insert or update
-	<div id="s" style="background-color:black;width:1000px;color:white;">
-		<a href="">settings localStorage<a/>
+	<div style="width:90%;">
+		<div id="s" style="float:left;background-color:black;color:white;width:80%;">
+			<a href="">settings localStorage<a/>
+		</div>
+		<div id="dbg_short" style="float:right;background-color:brown;color:white;width:20%;white-space:nowrap;">
+			
+		</div>
 	</div>
 	<div id="o">
 		..

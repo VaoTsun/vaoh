@@ -159,16 +159,19 @@ app.get('/*', function(req, res) {
 		}
 		if ((extension == 'js' || extension == 'json') && ['/index.js','/gr.js','/config.js','/classifiers.json'].indexOf(req.url) < 0) {
 			var type = 'application/javascript';
-			var bin = 'binary';
+			var bin = '';
 			permit = true;
 		}
 		if ( permit == true ) {
 			fs.readFile(__dirname+'/'+req.url,function (err, data){
 				console.log(err);
 				if (data) {
-					data=String(data)
+					if (type == 'application/javascript') {
+						data=String(data);
+					}
 					res.writeHead(200, {'Content-Type': type,'Content-Length':data.length});
 					res.end(data, bin);
+// 					/console.log(data);
 					return true;
 					} else {
 					res.end('file' + req.url+' not found... And you what expected?..');
