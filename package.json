@@ -9,7 +9,6 @@
   "dependencies": {
     "express": "~4.9.x"
     , "pg": "~4.4.x"
-//    , "utf": "~2.1.x"
   },
   "engines": {
     "node": "0.12.2"
