@@ -23,12 +23,15 @@
 				<a href="" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;">use default json </a> &nbsp;
 			</div>
 			<div >
-				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);document.getElementById('f').innerHTML = concatHtmlObject(json);return false;"> draw </a> &nbsp;
+				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> draw </a> &nbsp;
+			</div>
+			<div >
+				<a href="" onclick="console.log(v.jsons);return false;" title="should allow to step back to any timestamp json"> history </a> &nbsp; 
 			</div>
 		</span>
 	</div>
 	
-	
+	history has timestampsas keys => should allow to step back to any timestamp json
 
 <script>
 
@@ -68,11 +71,14 @@ var json = {
 	,"lop":false
 }
 
-function showObject(o) {
+function blindToObjecT(o) {
 	/*
 		We intend to have dots in column names, so we use Array addressing in json objectss
 
 	*/
+	if (typeof(o) == 'undefined') {
+		return false;
+	}
 	var path = o.split(v.delim);
 	var bicycle = 'json';
 	var bicycleParent = 'json';
@@ -84,20 +90,32 @@ function showObject(o) {
 			bicycleParent += '["'+path[i]+'"]';
 		}
 	}
-	var co = eval(bicycle);
-	var po = eval(bicycleParent);
-	
-	v.jsons.push(json);
-	
-	
-	console.log(bicycle,o,bicycleParent);
-	//appendHtmlObject(o,bicycle);
-	console.log(co,Object.prototype.toString.call(co));
+	return {"obj":bicycle,"dad":bicycleParent,"path":path};
 }
 
-function appendHtmlObject(o,b) {
+
+function showObject(o) {
+	var co =  eval(blindToObjecT(o).obj);
+	var po =  eval(blindToObjecT(o).dad);
+
+	v.jsons[new Date().getTime()] = json;
+		
+	if (Object.prototype.toString.call(po) == '[object Array]') {
+		po.push(co);
+		draw();
+		console.log(po,json);
+		
+		//appendArrayNode(o,co);
+	}
+	
+	
+	//console.log(co,o,po);
+	//console.log(co,Object.prototype.toString.call(co));
+}
+
+function appendArrayNode(o,b) {
 	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+b;
-	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+concatHtmlObject(eval(b));
+	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+concatHtmlObject(eval(b)[0]);
 }
 
 function concatHtmlObject(obj,parent) {
@@ -110,9 +128,14 @@ function concatHtmlObject(obj,parent) {
    for (var key in obj) {
     	r += '<LI id="'+parent+v.delim+key+'"> ';
    		if ( typeof(obj[key]) == 'object' && obj[key] != null) {
-  			var e = '<i style="color:black;white-space:nowrap;"  onclick="showObject(\''+parent+v.delim+key+'\');">++</i>';
+   			if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
+   				var ar = 'clone Array';
+   				} else {
+   				var ar = 'clone not Arr';
+   			}
+  			var e = '<i style="color:black;white-space:nowrap;" title="'+ar+'" onclick="showObject(\''+parent+v.delim+key+'\');">++</i>';
     		} else {
-  			var e = '<i style="color:black;white-space:nowrap;"  onclick="showObject(\''+parent+v.delim+key+'\');">+</i>';
+  			var e = '<i style="color:black;white-space:nowrap;" title="'+ar+'" onclick="showObject(\''+parent+v.delim+key+'\');">+</i>';
     	}
 		if (typeof(parent) == 'undefined') {
 			r += key + e + concatHtmlObject(obj[key],''+key+'');
@@ -124,9 +147,11 @@ function concatHtmlObject(obj,parent) {
     return r;
 }
 
+function draw() {
+	document.getElementById('f').innerHTML = concatHtmlObject(json);
 
+}
 document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
-document.getElementById('f').innerHTML = concatHtmlObject(json);
-console.log(json["b"]["b"]);
+draw();
 
 </script>
