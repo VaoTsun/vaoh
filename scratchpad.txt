@@ -1,0 +1,69 @@
+begin;
+delete from analytics.runtime_bet365migra where rt_id > (274317148-8000000);
+truncate table analytics.runtime_bet365migra_1;
+insert into analytics.runtime_bet365migra_1 select * from analytics.runtime_bet365migra where rt_id > (274317148-10000000);
+end;
+\i 3
+
+
+
+select distinct o.gr_playerid
+from gameplay.gamerounds o
+join gr_bet365_diff b on o.gr_id=b.gr_id and o.gr_opt_id = 1001
+limit 4
+;
+
+create table gr_bet365_diff as 
+select b.* from gameplay.gamerounds o
+join gr_bet365 b on o.gr_id=b.gr_id and o.gr_opt_id = 1001
+where o.gr_timestamp_updated != b.gr_timestamp_updated
+;
+
+
+
+begin;
+  update gameplay.gamerounds
+  set gr_timestamp_updated = b.gr_timestamp_updated
+  from 
+  ( select * from gr_bet365_diff ) b
+  where true
+    and gamerounds.gr_id = b.gr_id
+    and gamerounds.gr_timestamp_updated != b.gr_timestamp_updated
+    and gamerounds.gr_opt_id=1001
+;
+rollback;
+
+http://www.ecma-international.org/publications/files/ECMA-ST/Ecma-262.pdf
+http://docs.ansible.com/ansible/get_url_module.html
+https://www.stunnel.org/static/stunnel.html
+http://www.postgresql.org/docs/9.3/static/contrib.html
+https://github.com/EnterpriseDB/mongo_fdw/blob/master/README.md
+http://docs.mongodb.org/manual/reference/method/js-collection/
+http://use-the-index-luke.com/sql/preface
+https://wiki.postgresql.org/wiki/Binary_Replication_Tutorial
+https://nodejs.org/api/child_process.html
+http://docs.mongodb.org/manual/reference/operator/update/rename/
+http://www.postgresql.org/docs/current/static/sql-prepare-transaction.html
+http://www.postgresql.org/docs/current/static/transaction-iso.html#XACT-REPEATABLE-READ
+http://www.kapital-marks.ru/
+https://www.elastic.co/products/elasticsearch
+http://www.postgresql.org/docs/9.4/static/routine-vacuuming.html
+http://www.postgresql.org/docs/9.1/static/functions-info.html
+http://www.postgresql.org/docs/9.1/static/ddl-inherit.html
+http://testdb1.odobo.local/tool/manitou.pulsate.js
+http://www.postgresql.org/docs/9.1/static/textsearch-controls.html
+http://callbackhell.com/
+https://www.google.com.gi/webhp?sourceid=chrome-instant&ion=1&espv=2&es_th=1&ie=UTF-8#q=lrt+pamatai+nereikia+leidimo
+http://stackoverflow.com/questions/12206600/how-to-speed-up-insertion-performance-in-postgresql/12207237?newreg=6f673e759e874f17b6f52a0013356303
+http://www.supernamai.lt/?klausk=738
+http://toyota.ilcats.ru/part/vin//market/euro/kat/B1/modelcode/152550/model/CDE120L-AHMDYW/group/4/subgroup/8718/pid/13317#ddtr_88712
+http://www.toyodiy.com/parts/g_E_200303_TOYOTA_COROLLA_CDE120L-AHMDYW_4.html
+https://www.recambioverde.es/piezas-desguace/toyota/brazo-suspension-inferior-delantero-derecho-toyota-corolla-e12-2001-2007_rv860022003026.html
+https://developer.mozilla.org/en-US/docs/Web/JavaScript
+http://www.w3.org/TR/DOM-Level-3-Core/ecma-script-binding.html
+http://platform.odobo.qa/rest/operatorEnvironments/1002/gameInstances
+https://wiki.postgresql.org/wiki/Tuning_Your_PostgreSQL_Server
+https://ru.wikipedia.org/wiki/REST
+http://antmakarenko.narod.ru/liter/flg.htm
+https://sysadmincasts.com/episodes/43-19-minutes-with-ansible-part-1-4
+https://www.elastic.co/guide/en/logstash/current/contributing-to-logstash.html#_adding_plugins

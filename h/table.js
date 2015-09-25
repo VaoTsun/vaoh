@@ -11,6 +11,7 @@ var v = {
 		, "highlightPosition" : true
 		, "highlightTimeout" : 1000
 		, "highlightSelectedHeader" : true
+		, "highlightRowOnClick" : false
 		, "monochromeZebra" : true
 		, "skipPreAgg" : false
 		, "thousandSeparator" : ","
@@ -19,10 +20,10 @@ var v = {
 		, "monochromeZebraMax" : 20000
 	}
 	, "dataProp" : {
-		  "numeric" : function () { return {"columnName":null, "dataType": null,"sum":0,"cnt":0, "min":null,"max":null,"avg":null,"order":null}; }
-		, "float" : function () { return {"columnName":null, "dataType": null,"sum":0,"cnt":0, "min":null,"max":null,"avg":null,"order":null}; }
-		, "string" : function () { return {"columnName":null, "dataType": null,"cnt":0,"maxLength" : null, "minLength" : null,"order":null}; }
-		, "date" : function () { return {"columnName":null, "dataType": null,"cnt":0,"maxDate" : null, "minDate" : null,"order":null}; }
+		  "numeric" : function () { return {"sum":0,"cnt":0, "min":null,"max":null,"order":null}; }
+		, "float" : function () { return {"sum":0,"cnt":0, "min":null,"max":null,"order":null}; }
+		, "string" : function () { return {"cnt":0,"maxLength" : null, "minLength" : null,"order":null}; }
+		, "date" : function () { return {"cnt":0,"maxDate" : null, "minDate" : null,"order":null}; }
 		, "columns" : {}
 		, "caseSensitiveSort" : true
 		, "app" : {}
@@ -118,6 +119,10 @@ function parseGet() {
 		   $_GET[aux[0]] = aux[1];
 		}
 	}
+}
+
+function saveOutlook() {
+	localStorage.setItem('v.outlook',JSON.stringify(v.outlook));
 }
 
 parseGet();
@@ -256,9 +261,23 @@ function fillupTable() {
 	for (var e=0;e<rk.length;e++) {
 		$('hdr'+(e)).innerHTML =  rk[e]
 			+ '&nbsp;'
-			+ '<sup style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'asc\');" >&#9650;</sup>'
-			+ '<sub style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'desc\');" >&#9660;</sub>'
+			+ '<sup id="asc'+e+'" style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'asc\');" >&#9650;</sup>'
+			+ '<sub id="desc'+e+'" style="font-size:10px;color:pink;" onclick="sortResults(\'hdr'+e+'\',\'desc\');" >&#9660;</sub>'
 		applyStyles($('hdr'+e),v.styles.headerTr);
+		
+		console.log(rk[e],v.dataProp.columns[rk[e]].order);
+		
+		if (v.dataProp.columns[rk[e]].order == 'desc') {
+			
+			$('desc'+e).style.color = 'red';
+			} else {
+			$('desc'+e).style.color = 'grey';
+		}
+		if (v.dataProp.columns[rk[e]].order == 'asc') {
+			$('asc'+e).style.color = 'red';
+			} else {
+			$('asc'+e).style.color = 'grey';
+		}
 	}
 
 	//Data itself
@@ -271,6 +290,9 @@ function fillupTable() {
 				tr.className="hard";
 			}
 
+		}
+		tr.onclick = function() {
+			highLightClicked(this.children[1].id);
 		}
 
 		if (v.outlook.highlightPositio) {
@@ -401,6 +423,7 @@ function createHtmlTable() {
 		tr.id="tr_"+i;
 		var text = document.createTextNode(i+1); 
 		var td = document.createElement("TD"); 
+		td.classList.add('noselect');
 		td.appendChild(text);
 		tr.appendChild(td); 
 		for (var e=0;e<rk.length;e++) {
@@ -413,7 +436,6 @@ function createHtmlTable() {
 	}
 	v.dataProp.app.HtmlStructurePrepare = ( new Date().getTime() - startTime );
 }
-
 
 function fillInCalculationsRow() {
 	var rk = Object.keys(data[0]);
@@ -443,7 +465,7 @@ function fillInCalculationsRow() {
 					v.dataProp.columns[rk[e]][v.dataProp.columns[rk[e]].defaultMethod]
 				);
 			} else {
-			document.getElementById('calc'+e).innerHTML = 'dataType';
+			document.getElementById('calc'+e).innerHTML = 'dataType : '+ v.dataProp.columns[rk[e]].dataType;
 		}
 		
 	}
@@ -545,8 +567,6 @@ function calculationTabPosition() {
 	return r;
 }
 
-
-
 function defineDataTypes() {
 	/*
 		Type of column could be checked against each value. Should it be?
@@ -594,23 +614,13 @@ Array.prototype.min = function() {
 
 function initiateColumn(e,t) {
 	var rk = Object.keys(data[0]);
-	if ( typeof(sav[rk[e]]) == 'undefined') {
-		sav[rk[e]] = new v.dataProp[t];
-	}
-	v.dataProp.columns[rk[e]] = sav[rk[e]];
-	//console.log(v.dataProp.columns[rk[e]]);
-	//v.dataProp.columns = sav;
-	//console.log(sav[rk[e]]);
-	//mergeSaved('dataProp');
-	//v.dataProp.columns[rk[e]] = v.dataProp[t];
+	v.dataProp.columns[rk[e]] = new v.dataProp[t];
 	v.dataProp.columns[rk[e]].dataType = t;
 	v.dataProp.columns[rk[e]].columnName = rk[e];
 	v.dataProp.columns[rk[e]].columnNr = e+1;
 	v.dataProp.columns[rk[e]].defaultMethod = sav[rk[e]].defaultMethod;
 	v.dataProp.columns[rk[e]].order = sav[rk[e]].order;
 	v.dataProp.columns[rk[e]].columnName = rk[e];
-	//localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns))
-	//console.log(v.dataProp.columns,rk[e]);
 }
 
 function DateFormat(d,format) {
@@ -699,6 +709,9 @@ function sortResults(o,a) {
 		maybe NULL sorting should be parametrized
 		maybe sorting should be indexed & mapped like https://en.wikipedia.org/wiki/Schwartzian_transform
 	*/
+	
+	lowlightPreviouslySelected();
+	startSelectingColumn();
 	var startTime = new Date().getTime();
 	
 	this.caseSensitive = function(s) { 
@@ -710,8 +723,10 @@ function sortResults(o,a) {
 	
 	var ak = Object.keys(v.dataProp.columns);
 	v.dataProp.columns[ak[o.split('hdr')[1]]].order = a;
-	var c = v.dataProp.columns[ak[o.split('hdr')[1]]];
+	localStorage.setItem('v.dataProp.columns',JSON.stringify(v.dataProp.columns));
 	
+	var c = v.dataProp.columns[ak[o.split('hdr')[1]]];
+	infoLine(' "' + c.columnName + '" ordered ' + c.order + 'ending');
 	data = data.sort(function(a, b) {
 		if (c.order == 'asc') {
 			if (c.dataType == 'numeric' || c.dataType == 'float') {
@@ -745,37 +760,6 @@ function sortResults(o,a) {
 	return true;
 	}
 	
-
-var prep = function () {
-	console.log('initiated:' ,new Date().getTime() - globalStartTime);
-	data = new Array();
-	data[0] = new Array();
-	data[1] = new Array();
-	data[2] = new Array();
-	data[0]["one"] = 'polk';
-	data[1]["one"] = 'polk';
-	data[2]["one"] = 'polk';
-	createHtmlTable();
-}
-
-
-
-showWaiting(0);
-prep();
-loadJSON(
-	  v.dataProp.url
-	, function(a,b) {//console.log(b);
-		v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
-		
-		data = JSON.parse(a).rows;
-		
-		createHtmlTable();
-		bcl();
-	  }
-	, function(a,b,err) {console.log(a,b,err);}
-	, 23
-);
-
 function infoLine(str) {
 	var c = IsJsonString(str).string;
 	document.getElementById("s").innerHTML = c;
@@ -830,12 +814,8 @@ function bcl() {
 	console.log(v.dataProp.app);
 }
 
-window.onload = onLoad();
-
-
-
 function IsJsonString(str) {
-	var m = new Object({"exc" : "not json","string":str});
+	var m = new Object({"exc" : "not json","string":str,"obj":{}});
     try {
         var r = JSON.parse(str);
     } catch (e) {//console.log(e);
@@ -878,8 +858,8 @@ function tdEvents(o) {
 			v.WorkingObjects.slectedCells = [];
 		}
 	;
-	o.dblclick = function() {
-			$(this).removeClass( "noselect" );
+	o.ondblclick = function() {
+			$(this.id).classList.remove("noselect" );
 			selection = window.getSelection();        
 			range = document.createRange();
 			range.selectNodeContents(this);
@@ -888,86 +868,89 @@ function tdEvents(o) {
 
 		}
 	;
+	/*
+	o.onclick = function() {
+		highLightClicked(this.id);
+	}
+	*/
+}
+
+function highlightRowOnClickClean() {
+	if ($(v.prevStyles.clickedTr)) {
+		$(v.prevStyles.clickedTr).classList.remove('selectHdr');
+	}
 }
 
 function startSelectingColumn (ind) {	//dropping previous selection on next
-	
-	var o = v.WorkingObjects.selectedSet;
-	var k = Object.keys(o);
-	for (var i=0;i<k.length;i++) {
-		$(o[k[i]]).style.borderLeft = '';
-		$(o[k[i]]).style.borderRight = '';
-		$(o[k[i]]).style.backgroundImage = '';
-		$(o[k[i]]).classList.remove('selectTd');
+	if (typeof(ind) =='undefined') {//it is called on sorting - just resetting styles
+		return false;
 	}
+	infoLine('&nbsp;');
+	if (v.outlook.highlightSelectedHeader) { /* remove class for all columns applying i to selected only */
+		for (var i =0;i< d(ind).kWidth;i++) {
+			$('hdr'+i).classList.remove('selectHdr');
+		}
+		$('hdr'+(d(ind).prop.columnNr -1)).classList.add('selectHdr');
+		
+		if (v.outlook.highlightRowOnClick) {/* now highlighting row as well*/
+			highlightRowOnClickClean();
+			$(ind).parentNode.classList.add('selectHdr');
+			v.prevStyles.clickedTr = $(ind).parentNode.id;
+		}
+	}
+	lowlightPreviouslySelected();
 	v.WorkingObjects.slectedStart=ind;
 }
 
+function lowlightPreviouslySelected() {
+	for (var i = 0; i < v.WorkingObjects.selectedSet.length; i++) {
+		$(v.WorkingObjects.selectedSet[i]).classList.remove('selectTd');
+		$(v.WorkingObjects.selectedSet[i]).parentNode.children[0].classList.remove('selectTd');
+	}
 
+}
 
-	function dragForSum(o) {
-		if (!detectLeftButton()) {
-			return false;
-		}
-		
-		if (v.outlook.highlightSelectedHeader) {
-			/* remove class for all columns applying i to selected only */
-			for (var i =0;i< d(o).kWidth;i++) {
-				$('hdr'+i).classList.remove('selectHdr');
-			}
-			$('hdr'+(d(o).prop.columnNr -1)).classList.add('selectHdr');
-		}
-		
-		/*
-		
-		
-		if (v.WorkingObjects.selectedSet.indexOf(v.WorkingObjects.slectedStart) < 0 ){
-			v.WorkingObjects.selectedSet.push(v.WorkingObjects.slectedStart);
-			$(v.WorkingObjects.slectedStart).classList.add('selectTd');
-		}
-		*/
-
-		
-		var from = parseInt(v.WorkingObjects.slectedStart.split('_')[1]);
-		var till = parseInt(o.split('_')[1]);
-		var coll = parseInt(o.split('_')[2]);
-		var summ = 0;
-		var db = ' ';
-		
-		
-		for (var i = 0; i < v.WorkingObjects.selectedSet.length; i++) {
-			$(v.WorkingObjects.selectedSet[i]).classList.remove('selectTd');
-		}
-		
-		for (var i=Math.min(from,till);i<= (Math.abs(from-till)+Math.min(from,till)) ;i++) {
-			var it = String('_'+i+'_'+coll);
-			v.WorkingObjects.selectedSet.push(it);
-			$(it).classList.add('selectTd');
-			if (d(it).prop.dataType == 'float' || d(it).prop.dataType == 'numeric') {
-				summ +=parseFloat(d(it).originalValue);
-				db += '    ['+d(it).originalValue+']'
-			}
-			
-		}
-		//console.log(v.WorkingObjects.selectedSet);
-		
-		var _mesg = ''
-			+ 'from: ' + (1+ Math.min(from,till)) + ' to ' + (1+ Math.max(from,till))
-			+ '. <b>count: ' + (Math.abs(from-till)+1) + '</b>, column: "' + d(o).prop.columnName + '" ' 
-			+ ' sum: <b title="'+ db+'">' + numberWithCommas(summ.toFixed(parseInt($_GET["Dec"]))) +'</b>'
-			+ db
-		;
-		infoLine(_mesg);
-		
-		
-		
+function dragForSum(o) {
+	if (!detectLeftButton()) {
+		return false;
 	}
 	
-	function detectLeftButton(evt) {
-		evt = evt || window.event;
-		var button = evt.which || evt.button;
-		return button == 1;
+	highlightRowOnClickClean();
+
+	v.WorkingObjects.from = parseInt(v.WorkingObjects.slectedStart.split('_')[1]);
+	v.WorkingObjects.till = parseInt(o.split('_')[1]);
+	v.WorkingObjects.coll = parseInt(o.split('_')[2]);
+	v.WorkingObjects.summ = 0;
+	var db = ' ';
+	
+	lowlightPreviouslySelected();
+	
+	for (var i=Math.min(v.WorkingObjects.from,v.WorkingObjects.till);i<= (Math.abs(v.WorkingObjects.from-v.WorkingObjects.till)+Math.min(v.WorkingObjects.from,v.WorkingObjects.till)) ;i++) {
+		var it = String('_'+i+'_'+v.WorkingObjects.coll);
+		v.WorkingObjects.selectedSet.push(it);
+		$(it).classList.add('selectTd');
+		$(it).parentNode.children[0].classList.add('selectTd');
+		if (d(it).prop.dataType == 'float' || d(it).prop.dataType == 'numeric') {
+			v.WorkingObjects.summ +=parseFloat(d(it).originalValue);
+			db += ''+d(it).originalValue+','
+		}
+		
 	}
+	var _avg = v.WorkingObjects.summ / (Math.abs(v.WorkingObjects.from-v.WorkingObjects.till)+1);
+	var _mesg = 'column: "' + d(o).prop.columnName + '".'
+		+ ' from: ' + (1+ Math.min(v.WorkingObjects.from,v.WorkingObjects.till)) + ' to ' + (1+ Math.max(v.WorkingObjects.from,v.WorkingObjects.till))
+		+ '. <b>count: ' + (Math.abs(v.WorkingObjects.from-v.WorkingObjects.till)+1) + '</b>, ' 
+		+ ' sum: <b title="['+ db+']">' + numberWithCommas(v.WorkingObjects.summ.toFixed(parseInt($_GET["Dec"]))) +'</b>'
+		+ ' avg: <b title="['+ db+']">' + numberWithCommas(_avg.toFixed(parseInt($_GET["Dec"]))) +'</b>'
+	;
+	infoLine(_mesg);
+}
+
+function detectLeftButton(evt) {
+	evt = evt || window.event;
+	var button = evt.which || evt.button;
+	return button == 1;
+}
 
 	function highlightByClassifiedIds(k,v,i) {
 		/* 
@@ -987,3 +970,194 @@ function startSelectingColumn (ind) {	//dropping previous selection on next
 		}
 	}
 	
+	
+	
+	
+Element.prototype.delayed = function (endCheckFunction,stepFunction,stepMicroSeconds,finishingTimeout,finalFunction,initial){
+	var id = this.id;
+	if (typeof(initial) == 'undefined') {
+		var initial = 0;
+	}
+	if (endCheckFunction() == true || Math.floor(finishingTimeout/stepMicroSeconds) == initial ||  initial > 99) {
+    	finalFunction();
+		return null;
+	}
+	setTimeout(function () {
+		stepFunction();
+		$(id).delayed(endCheckFunction,stepFunction,stepMicroSeconds,finishingTimeout,finalFunction,(initial+1))
+		}
+		,stepMicroSeconds
+	);
+};
+
+HTMLParagraphElement.prototype.delayed = function (endCheckFunction,stepFunction,stepMicroSeconds,finishingTimeout,finalFunction,initial){
+	var id = this.id;
+	if (typeof(initial) == 'undefined') {
+		var initial = 0;
+	}
+	if (endCheckFunction() == true || Math.floor(finishingTimeout/stepMicroSeconds) == initial ||  initial > 99) {
+    	finalFunction();
+		return null;
+	}
+	setTimeout(function () {
+		stepFunction();
+		$(id).delayed(endCheckFunction,stepFunction,stepMicroSeconds,finishingTimeout,finalFunction,(initial+1))
+		}
+		,stepMicroSeconds
+	);
+};
+
+
+Element.prototype.opac = function (endOpacity,stepMicroSeconds,finishingTimeout,initial,opacityStep){
+	if (typeof(initial) == 'undefined') {
+		var initial = 0;
+		var numberOfSteps = Math.floor(finishingTimeout/stepMicroSeconds);
+		var opacityStep = Math.abs(endOpacity - this.style.opacity) / numberOfSteps;
+	}
+	if (parseFloat(this.style.opacity) >= endOpacity || initial > 99) {
+    	//this.style.color = 'red';
+    	//this.innerHTML = 'a';
+		return null;
+	}
+	var id = this.id;
+	setTimeout(function () {
+		console.log($(id).style.opacity,id,endOpacity);
+		$(id).style.opacity = parseFloat($(id).style.opacity) + opacityStep;
+		$(id).opac(endOpacity,stepMicroSeconds,finishingTimeout,(initial),opacityStep)
+		}
+		,stepMicroSeconds*(initial+1)
+	);
+};
+
+Element.prototype.tryIt = function(a) {
+	this.opac(0.8,200,2000);
+};
+
+var pist = function () {
+	var start = 25;
+	var end = 800;
+	var endOp = 0.9
+	var id = 'sp'
+	$(id).delayed(
+		function () {
+			$(id).style.opacity == endOp;
+		}
+		,function () {
+			$(id).style.opacity = parseFloat($(id).style.opacity) + (endOp/(end/start));
+			//console.log($('sp').style.opacity,endOp/(end/start));
+		}
+		,start
+		,end
+		, function () {
+			$(id).style.color = 'orange';
+			$(id).innerHTML = 'loaded';
+		}
+	);
+}
+
+//(function fade(){(s.opacity-=.1)<0?s.display="none":setTimeout(fade,100)})();
+
+
+//window.onload = onLoad();
+
+var prep = function () {
+	console.log('initiated:' ,new Date().getTime() - globalStartTime);
+	data = new Array();
+	data[0] = new Array();
+	data[1] = new Array();
+	data[2] = new Array();
+	data[0]["one"] = 'polk';
+	data[1]["one"] = 'polk';
+	data[2]["one"] = 'polk';
+	createHtmlTable();
+}
+
+
+
+showWaiting(0);
+prep();
+loadJSON(
+	  v.dataProp.url
+	, function(a,b) {//console.log(b);
+		v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
+		
+		data = JSON.parse(a).rows;
+		
+		createHtmlTable();
+		bcl();
+	  }
+	, function(a,b,err) {console.log(a,b,err);}
+	, 23
+);
+pist();
+
+
+
+function highLightClicked(id) {
+	var endOp = $(id).parentNode.children.length;
+	var end = 600;
+	var step = Math.ceil( end / endOp);
+	var row = id.split('_')[1];
+	var processed = 0;
+	
+	if ($(v.prevStyles.clickedTabRow)) {
+		for (var i=0;i<endOp;i++) {
+			$(v.prevStyles.clickedTabRow).children[i].style.cssText = v.prevStyles.clickedTrCss[v.prevStyles.clickedTabRow];
+		}
+	}
+	v.prevStyles.clickedTabRow = $(id).parentNode.id;
+	v.prevStyles.clickedTrCss = [];
+	
+	
+	$(id).delayed(
+		function () {
+			processed == endOp;
+		}
+		,function () {
+			var o = $('_'+row+'_'+processed);
+			v.prevStyles.clickedTrCss[o.id] = o.style.cssText;
+			o.style.color = 'blue';
+			o.style.borderBottom = '2px solid blue';
+			//console.log('_'+row+'_'+processed, $('_'+row+'_'+processed));
+			processed++;
+		}
+		,step
+		,end
+		, function () {
+			$(id).parentNode.style.color = 'red';
+		}
+	);
+}
+
+var k = Object.keys(v.outlook);
+var s = JSON.parse(localStorage.getItem('v.outlook'));console.log(s);
+for (var i=0;i<k.length;i++) {
+	v.outlook[k[i]] = s[k[i]];
+	
+	if (v.outlook[k[i]] == true) {
+		var che = ' checked ';
+		} else {
+		var che = ' ';
+	}
+	if (typeof(v.outlook[k[i]]) == 'boolean') {
+		$('b').innerHTML = $('b').innerHTML + 
+			'<div><span>'
+			+k[i]+':</span><span><input type=checkbox id="'
+			+k[i]+'" onclick="v.outlook.'
+			+k[i]+'=this.checked;saveOutlook();" '+che+'></span></div>'
+		;
+	}
+	if (typeof(v.outlook[k[i]]) == 'number') {
+		$('b').innerHTML = $('b').innerHTML + 
+			'<div><span>'
+			+k[i]+':</span><span><input type=text id="'
+			+k[i]+'" onclick="v.outlook.'
+			+k[i]+'=this.checked;saveOutlook();" value="'+v.outlook[k[i]]+'"></span></div>'
+		;
+	}
+}
+
+document.getElementById('highlightRowOnClick').onmouseover = function () {highlightRowOnClickClean()};
+
+
+

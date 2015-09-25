@@ -1,0 +1,132 @@
+<html>
+<head>
+	<style>
+		div {color:red;width:100%;white-space:nowrap}
+		span {color:blue;}
+	</style>
+</head>
+<body>
+
+	<div style="width:1200px;height:400px;">
+		<span style="width:600px;background-color:white;height:600px;float:left;">
+			<div id=f>
+			</div>
+		</span>
+		<span style="width:400px;background-color:green;height:600px;float:right;">
+			<div >
+				<textarea style="width:100%;height:100%;background-color:#eeffff;" id="t">
+				</textarea>
+			</div>
+		</span>
+		<span style="width:100px;background-color:white;height:100px;float:right;">
+			<div >
+				<a href="" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;">use default json </a> &nbsp;
+			</div>
+			<div >
+				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);document.getElementById('f').innerHTML = concatHtmlObject(json);return false;"> draw </a> &nbsp;
+			</div>
+		</span>
+	</div>
+	
+	
+
+<script>
+
+/*
+	http://stackoverflow.com/questions/12996871/why-does-typeof-array-with-objects-return-object-and-not-array
+	
+*/
+var v ={
+	//"delim" : '->'
+	  "delim" : '>>'
+	, "jsons" : []
+};
+
+var json = {
+	"a":"polotok"
+	,"b":{
+		"q":null
+		,"e":345
+		,"b":[
+			{
+    		"arr": "1",
+    		"arr.field": {"age":32,"boolean.value" : null},
+    		"arrb": [null,true,false]
+		}
+		,{
+    		"arr": "2",
+    		"arr.field": {"age":32,"boolean.value" : null},
+    		"arrb": [null,true,false]
+		}
+		]
+		, "bob": {
+    		name: "Bob",
+    		"some.field": {"age":32,"boolean.value" : null},
+    		"inner": [null,true,false]
+		}
+	}
+	,"lop":false
+}
+
+function showObject(o) {
+	/*
+		We intend to have dots in column names, so we use Array addressing in json objectss
+
+	*/
+	var path = o.split(v.delim);
+	var bicycle = 'json';
+	var bicycleParent = 'json';
+	for (var i=0; i<path.length;i++) {
+		if (path[i] != 'undefined') {
+			bicycle += '["'+path[i]+'"]';
+		}
+		if (path[i] != 'undefined' && ( i+1 )<path.length) {
+			bicycleParent += '["'+path[i]+'"]';
+		}
+	}
+	var co = eval(bicycle);
+	var po = eval(bicycleParent);
+	
+	v.jsons.push(json);
+	
+	
+	console.log(bicycle,o,bicycleParent);
+	//appendHtmlObject(o,bicycle);
+	console.log(co,Object.prototype.toString.call(co));
+}
+
+function appendHtmlObject(o,b) {
+	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+b;
+	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+concatHtmlObject(eval(b));
+}
+
+function concatHtmlObject(obj,parent) {
+    if (obj === null || typeof obj !== 'object') {
+        return '<input name="" value="'+obj+'">';
+    }
+ 	var k = Object.keys(obj);
+ 	//console.log(k);
+ 	var r = '<UL id="'+parent+'">';
+   for (var key in obj) {
+    	r += '<LI id="'+parent+v.delim+key+'"> ';
+   		if ( typeof(obj[key]) == 'object' && obj[key] != null) {
+  			var e = '<i style="color:black;white-space:nowrap;"  onclick="showObject(\''+parent+v.delim+key+'\');">++</i>';
+    		} else {
+  			var e = '<i style="color:black;white-space:nowrap;"  onclick="showObject(\''+parent+v.delim+key+'\');">+</i>';
+    	}
+		if (typeof(parent) == 'undefined') {
+			r += key + e + concatHtmlObject(obj[key],''+key+'');
+			} else {
+			r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
+		}
+    }
+ 	r+='</UL>';
+    return r;
+}
+
+
+document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
+document.getElementById('f').innerHTML = concatHtmlObject(json);
+console.log(json["b"]["b"]);
+
+</script>
