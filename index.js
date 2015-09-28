@@ -10,6 +10,7 @@ types.setTypeParser(20, function(val) {
   return val === null ? null : parseInt(val)
 })
 
+/*
 var moment = require('moment')
 var TIMESTAMPTZ_OID = 1114
 var TIMESTAMP_OID = 1184
@@ -18,6 +19,7 @@ var parseFn = function(val) {
 }
 types.setTypeParser(TIMESTAMPTZ_OID, parseFn)
 types.setTypeParser(TIMESTAMP_OID, parseFn)
+*/
 //psql -c "select typname, oid, typarray from pg_type where typtype = 'b' order by oid"
 
 /*
