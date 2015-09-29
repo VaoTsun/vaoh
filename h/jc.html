@@ -73,12 +73,12 @@ var json = {
 			{
     		"arr": "1",
     		"arr.field": {"age":32,"boolean.value" : null},
-    		"arrb": [null,true,false]
+    		"ar:rb": [null,true,false]
 		}
 		,{
     		"arr": "2",
     		"arr.field": {"age":32,"boolean.value" : null},
-    		"arrb": [null,true,[1,2,3],"String"]
+    		"ar:rb": [null,true,[1,2,3],"String"]
 		}
 		]
 		, "bob": {
@@ -59369,7 +59369,11 @@ function concatHtmlObject(obj,parent) {
 		if (typeof(parent) == 'undefined') {
 			r += ''+key+'' + e + concatHtmlObject(obj[key],''+key+'');
 			} else {
-			r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
+				if (key.indexOf(':') > 0) {
+					r += key + e + concatHtmlObject(JSON.stringify(obj[key],null,2),''+parent+v.delim+key+'');
+					} else {
+					r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
+				}
 		}
 		r += '';
     }
