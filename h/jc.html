@@ -5,6 +5,20 @@
 		span {color:blue;}
 		.array {color:green;}
 		.object {color:brown;}
+		a.clone {color:green;font-size:9px;}
+		/*li {display:none;}*/
+		img {width:9px;height:9px;}
+		ul { 
+			list-style-type: none;
+			padding-left: 4px;
+			margin: 2px;
+			list-style-position: inside;
+			/*display: inline-block;*/
+			display: inline;
+		}
+		li {
+		padding-left: 20px;
+		}
 	</style>
 </head>
 <body>
@@ -45,6 +59,7 @@ var v ={
 	//"delim" : '->'
 	  "delim" : '>>'
 	, "jsons" : []
+	, "expanded" : []
 };
 
 var json = {
@@ -52,7 +67,7 @@ var json = {
 	,"b":{
 		"q":null
 		,"e":345
-		,"b":[
+		,"nextb":[
 			{
     		"arr": "1",
     		"arr.field": {"age":32,"boolean.value" : null},
@@ -61,7 +76,7 @@ var json = {
 		,{
     		"arr": "2",
     		"arr.field": {"age":32,"boolean.value" : null},
-    		"arrb": [null,true,false]
+    		"arrb": [null,true,[1,2,3],"String"]
 		}
 		]
 		, "bob": {
@@ -72,6 +87,7 @@ var json = {
 	}
 	,"lop":false
 }
+/**/
 
 var bjson = {
   "game.game_engine": [
@@ -59238,6 +59254,8 @@ var bjson = {
   ]
 }
 
+json=bjson;
+
 function blindToObjecT(o) {
 	/*
 		We intend to have dots in column names, so we use Array addressing in json objectss
@@ -59260,65 +59278,111 @@ function blindToObjecT(o) {
 	return {"obj":bicycle,"dad":bicycleParent,"path":path};
 }
 
+function updateValue(parent,value) {
+	console.log(blindToObjecT(parent).obj+'="'+value+'"',parent,value);
+	eval (blindToObjecT(parent).obj+'="'+value+'"');
+	draw();
+	//eval(''blindToObjecT(\''+parent+'\').dad))
+}
 
 function showObject(o) {
+	console.log(new Date());
 	var co =  eval(blindToObjecT(o).obj);
 	var po =  eval(blindToObjecT(o).dad);
-
-	//v.jsons[new Date().getTime()] = json;
-		
 	if (Object.prototype.toString.call(po) == '[object Array]') {
 		po.push(co);
 		draw();
 		console.log(po,json);
-		
-		//appendArrayNode(o,co);
 	}
-	
-	
-	//console.log(co,o,po);
-	//console.log(co,Object.prototype.toString.call(co));
 }
 
-function appendArrayNode(o,b) {
-	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+b;
-	document.getElementById(o).innerHTML=document.getElementById(o).innerHTML+concatHtmlObject(eval(b)[0]);
+function toggle(o) {
+	if (o.children[0].tagName == 'IMG') {
+		if (o.children[0].src.slice(-5) == '+.png') {
+			o.children[0].src = '../i/-.png';
+			 } else {
+			o.children[0].src = '../i/+.png';
+		}
+	}
+	
+	for(var c=0;c<o.children.length;c++) {
+
+		if (o.children[c].style.display == 'none') {
+			if (o.children[c].tagName != 'IMG') {
+				o.children[c].style.display = '';
+				if (v.expanded.indexOf(o.id) < 0) {
+					v.expanded.push(o.id);
+				}
+			}
+		} 
+
+		else if (o.children[c].style.display == '') {
+			if (o.children[c].tagName != 'IMG' && o.id != 'undefined') {
+				o.children[c].style.display = 'none';
+			}
+		}
+		
+		
+	};
 }
 
 function concatHtmlObject(obj,parent) {
     if (obj === null || typeof obj !== 'object') {
-        return '<input name="" value="'+obj+'">';
+        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.style.display=\'none\';">'
+        	+obj
+        	+'</i><input name="" title="'+parent+'" value="'+obj+'" onmouseout="updateValue(\''+parent+'\',this.value);" style="display:none;" >';
     }
  	var k = Object.keys(obj);
- 	//console.log(k);
- 	var r = '<UL id="'+parent+'">';
-   for (var key in obj) {
-    	r += '<LI id="'+parent+v.delim+key+'"> ';
+	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);">';
+   	for (var key in obj) {
+   		//console.log(v.expanded.indexOf(parent),parent);
+   		if (typeof(parent) == 'undefined' || v.expanded.indexOf(parent) > -1) {
+   			var disp = ''; 
+   			} else {
+   			var disp = 'display:none;'; 
+   		}
+    	r += '<LI id="'+parent+v.delim+key+'" style="'+disp+'white-space:nowrap;width:1000px;">';
    		if ( typeof(obj[key]) == 'object' && obj[key] != null) {
    			if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
+   				//console.log(parent,obj);
    				var ar = 'array';
+    			var sg = '<a href="" class="clone" onclick="showObject(\''+parent+v.delim+key+'\');return false;">++[]</a>';
+  				} else {
+   				var ar = 'object';
+   				var sg = '';
+   				//console.log(obj);
+   			}
+  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'">'+sg+'</i>';
+    		} else {
+   			if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
+   				//console.log(parent,obj);
+   				var ar = 'array';
+   				var sg = '<a href="" class="clone" onclick="showObject(\''+parent+v.delim+key+'\');return false;">+[]</a>';
    				} else {
    				var ar = 'object';
-   			}
-  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'" onclick="showObject(\''+parent+v.delim+key+'\');">++</i>';
-    		} else {
-  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'" onclick="showObject(\''+parent+v.delim+key+'\');">+</i>';
+   				var sg = '';   			}
+  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'" >'+sg+'</i>';
     	}
 		if (typeof(parent) == 'undefined') {
-			r += key + e + concatHtmlObject(obj[key],''+key+'');
+			r += ''+key+'' + e + concatHtmlObject(obj[key],''+key+'');
 			} else {
 			r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
 		}
+		r += '';
     }
  	r+='</UL>';
     return r;
 }
 
 function draw() {
+	console.log(v.expanded);
 	document.getElementById('f').innerHTML = concatHtmlObject(json);
 
 }
 document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
-draw();
+
+if (JSON.stringify(json).length < 999	) {
+	draw();
+}
 
 </script>
