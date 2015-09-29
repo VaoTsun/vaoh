@@ -22,7 +22,9 @@
 	</style>
 </head>
 <body>
-
+	<p>
+		click draw if no tree below. use double click for editing the value. key name changing is not implemented yet
+	</p>
 	<div style="width:1200px;height:400px;">
 		<span style="width:600px;background-color:white;height:600px;float:left;">
 			<div id=f>
@@ -59328,9 +59330,10 @@ function toggle(o) {
 
 function concatHtmlObject(obj,parent) {
     if (obj === null || typeof obj !== 'object') {
-        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.style.display=\'none\';">'
-        	+obj
-        	+'</i><input name="" title="'+parent+'" value="'+obj+'" onmouseout="updateValue(\''+parent+'\',this.value);" style="display:none;" >';
+        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.parentNode.children[3].style.display=\'\';this.style.display=\'none\';">'
+        	+ obj
+        	+ '</i><input name="" title="'+parent+'" value="'+obj+'"  style="display:none;" >'
+        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[2].value);" style="display:none;" type="button">';
     }
  	var k = Object.keys(obj);
 	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);">';
