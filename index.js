@@ -1,7 +1,7 @@
 var express = require('express')
 	, fs = require('fs')
 	, pg = require('pg')
-	//, q = require(__dirname+'/e/db.js')
+	, q = require(__dirname+'/e/db.js')
 ;
 var app = express();
 var types = require('pg').types
