@@ -3,8 +3,8 @@
 	<style>
 		div {color:red;width:100%;white-space:nowrap}
 		span {color:blue;}
-		.array {color:green;}
-		.object {color:brown;}
+		.array {color:#002288;}
+		.object {color:#008822;}
 		a.clone {color:green;font-size:9px;}
 		/*li {display:none;}*/
 		img {width:9px;
@@ -26,7 +26,7 @@
 			color:purple;
 			background-color: orange;
 			opacity: 0.6;
-			border: 1px purple solid;
+			border: 3px purple double;
 			border-radius: 5px;
 			width: 300px;
 			height: 30px;
@@ -40,33 +40,46 @@
 </head>
 <body>
 	<p id="helpP">
-		<i style="border:2px purple solid;border-radius: 10px;"> &nbsp;i&nbsp;  </i> &nbsp;&nbsp;use double click for editing the value. 
+		<i style="border:2px purple solid;border-radius: 10px;"> &nbsp;i&nbsp;  </i> &nbsp;&nbsp; <font id="mess"></font>
 	</p>
 	<div style="width:1600px;height:400px;">
 		<span style="width:600px;background-color:white;height:600px;float:left;">
 			<div id=f>
 			</div>
 		</span>
-		<span style="width:400px;background-color:green;height:600px;float:right;">
+		
+		<span style="width:120px;background-color:white;height:100px;float:right;">
+			<div style="height:22px;">
+				<input type=button DISABLED value="generate JSON" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;"> 
+			</div>
+			<div >
+				<input type=button value="redraw" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> 
+			</div>
+			<br>
+		</span>
+		
+		<span style="width:15px;float:right;border-left:3px green double;height:150%;opacity:0.2;">
+		</span>
+		
+		<span style="width:600px;background-color:green;height:600px;float:right;">
 			<div >
 				<textarea style="width:100%;height:100%;background-color:#eeffff;" id="t">
 				</textarea>
 			</div>
 		</span>
+		
+		<span style="width:15px;float:right;border-right:3px green double;height:150%;opacity:0.2;">
+		</span>
+		
 		<span style="width:120px;background-color:white;height:100px;float:right;">
-			<div >
-				<a href="" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;">use default json </a> &nbsp;
-			</div>
-			<div >
-				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> (re)draw </a> &nbsp;
-			</div>
-			<br>
-			<div style="color:purple;">
-				undo untill: &nbsp; 
+			<div style="color:purple;border-bottom:3px green double;display:none;" id="hs">
+				undo until: &nbsp; 
 			</div>
 			<div id="h" style="color:purple;overflow-y:auto;;height:100px;">
 			</div>
 		</span>
+		
+		
 	</div>
 	
 <script>
@@ -79,6 +92,7 @@ var v ={
 	  "delim" : '>>'	//'->'
 	, "typeSeparator" : ":"
 	, "jsons" : []
+	, "acts" : []
 	, "expanded" : []
 	, "textPixels" : 10
 	, "cloneSign" : "&#8838;"
@@ -94,7 +108,7 @@ var json = {
 			{
     		"arr": "1",
     		"arr.field": {"age":32,"boolean.value" : null},
-    		"ar:rb": [null,true,false]
+    		"arrb": [null,true,[[5],[6]],[7]]
 		}
 		,{
     		"arr": "2",
@@ -59301,7 +59315,7 @@ function blindToObjecT(o) {
 }
 
 function updateValue(parent,value) {
-	saveUndo();
+	saveUndo('<u title=" '+blindToObjecT(parent).obj.replace(/"/g, '')+'">edit value</u>');
 	if (parent.indexOf('json'+v.typeSeparator) > -1) {//if type is set => can be json as string => needs evaluation
 		eval (blindToObjecT(parent).obj+'='+value+'');
 		} else {
@@ -59311,7 +59325,7 @@ function updateValue(parent,value) {
 }
 
 function updateKey(parent,value) {
-	saveUndo();
+	saveUndo('<u title=" '+blindToObjecT(parent).obj.replace(/"/g, '')+'">rename key</u>');
 	eval (blindToObjecT(parent).dad+'["'+value+'"]='+blindToObjecT(parent).obj);
 	eval ('delete '+blindToObjecT(parent).obj);
 	/*
@@ -59323,16 +59337,19 @@ function updateKey(parent,value) {
 	console.log(value,blindToObjecT(parent));
 }
 
-function saveUndo(once) {
+function saveUndo(act,once) {
 	if (once == true && v.oneSave == true) {
 		return null;	//we want only one save on clicking history steps 
 	}
 	var th = new Date();
 	t = th.getTime();
 	v.jsons[t] = JSON.parse(JSON.stringify(json));
+	v.acts[t] = act;
 	document.getElementById("h").innerHTML = '<BR>'
-		+ '<u id="'+t+'" onclick="saveUndo(true);json = v.jsons[parseInt(this.id)];draw();return false;" style="font-size:10px;cursor:pointer;"> '
+		+ '<u id="'+t+'" onclick="saveUndo(\'auto\',true);json = v.jsons[parseInt(this.id)];draw();return false;" style="font-size:10px;cursor:pointer;"> '
 		+ String(100+th.getHours()).slice(-2)+':'+String(100+th.getMinutes()).slice(-2)+':'+String(100+th.getSeconds()).slice(-2)
+		+ '&nbsp;' 
+		+ v.acts[t]
 		+' </u> &nbsp;'
 		+ document.getElementById("h").innerHTML 
 	;
@@ -59344,13 +59361,16 @@ function saveUndo(once) {
 }
 
 function showObject(o) {
-	saveUndo();
 	var co =  eval(blindToObjecT(o).obj);
 	var po =  eval(blindToObjecT(o).dad);
 	if (Object.prototype.toString.call(po) == '[object Array]') {
 		if (Object.prototype.toString.call(co) == '[object Object]') {//do we have to "reparse" Array as well?.. 
 			co = JSON.parse(JSON.stringify(co));	//dirty hack to clone object, not just readdress it
+			var cko = 'Object'; 
+			} else {
+			var cko = 'Element'; 
 		}
+		saveUndo('<u title=" '+blindToObjecT(o).obj.replace(/"/g, '')+'"> '+cko+ ' clone </u>');
 		po.push(co);
 		draw();
 	}
@@ -59423,7 +59443,7 @@ function concatHtmlObject(obj,parent) {
    				var sg = '';
    				//console.log(obj);
    			}
-  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'">'+sg+'</i>';
+  			var e = '<i style="color:black;white-space:nowrap;" >'+sg+'</i>';
     		} else {
    			if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
    				//console.log(parent,obj);
@@ -59432,13 +59452,16 @@ function concatHtmlObject(obj,parent) {
    				} else {
    				var ar = 'object';
    				var sg = '';   			}
-  			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'" >'+sg+'</i>';
+  			var e = '<i style="white-space:nowrap;" >'+sg+'</i>';
     	}
-    	var htmlKey = '<b ondblclick="this.parentNode.children[1].style.display=\'\';this.parentNode.children[2].style.display=\'\';this.style.display=\'none\';">'+key+'</b>:'
-    		+ '<input value="'+key+'" style="display:none;" >'
-        	+ '<input value="OK" onclick="updateKey(\''+parent+v.delim+key+'\',this.parentNode.children[1].value);" style="display:none;" type="button">'
-	   	;
-    	//var htmlKey = key;
+    	if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
+    		var htmlKey = '<b class="'+ar+'" ondblclick="showMessage(\'You can\\\'t rename array key\');">'+key+'</b>';
+    		}else {
+			var htmlKey = '<b class="'+ar+'" ondblclick="this.parentNode.children[1].style.display=\'\';this.parentNode.children[2].style.display=\'\';this.style.display=\'none\';">'+key+'</b>:'
+				+ '<input value="'+key+'" style="display:none;" >'
+				+ '<input value="OK" onclick="updateKey(\''+parent+v.delim+key+'\',this.parentNode.children[1].value);" style="display:none;" type="button">'
+			;
+    	}
 		if (typeof(parent) == 'undefined') {
 			r += ''+htmlKey+'' + e + concatHtmlObject(obj[key],''+key+'');
 			} else {
@@ -59460,12 +59483,19 @@ function draw() {
 
 }
 
+function showMessage(s) {
+	document.getElementById('helpP').style.display = '';
+	document.getElementById('mess').innerHTML=s;
+	setTimeout(function () {
+			document.getElementById('helpP').style.display = 'none';
+		},2000
+	);
+
+}
+
 //json=bjson;
 if (JSON.stringify(json).length < 999999	) {
 	draw();
 }
-setTimeout(function () {
-					document.getElementById('helpP').style.display = 'none';
-				},2000);
-
+showMessage('use double click for editing the value. ');
 </script>
