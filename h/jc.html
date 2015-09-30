@@ -7,7 +7,10 @@
 		.object {color:brown;}
 		a.clone {color:green;font-size:9px;}
 		/*li {display:none;}*/
-		img {width:9px;height:9px;}
+		img {width:9px;
+			height:9px;
+			cursor:pointer;
+		}
 		ul { 
 			list-style-type: none;
 			padding-left: 4px;
@@ -17,13 +20,27 @@
 			display: inline;
 		}
 		li {
-		padding-left: 20px;
+			padding-left: 20px;
+		}
+		p {
+			color:purple;
+			background-color: orange;
+			opacity: 0.6;
+			border: 1px purple solid;
+			border-radius: 5px;
+			width: 300px;
+			height: 30px;
+			line-height: 30px;
+			text-align: center;
+			vertical-align:middle;
+			position:absolute;
+			left:250px;
 		}
 	</style>
 </head>
 <body>
-	<p>
-		click draw if no tree below. use double click for editing the value. key name changing is not implemented yet
+	<p id="helpP">
+		<i style="border:2px purple solid;border-radius: 10px;"> &nbsp;i&nbsp;  </i> &nbsp;&nbsp;use double click for editing the value. 
 	</p>
 	<div style="width:1600px;height:400px;">
 		<span style="width:600px;background-color:white;height:600px;float:left;">
@@ -36,15 +53,18 @@
 				</textarea>
 			</div>
 		</span>
-		<span style="width:200px;background-color:white;height:100px;float:right;">
+		<span style="width:120px;background-color:white;height:100px;float:right;">
 			<div >
 				<a href="" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;">use default json </a> &nbsp;
 			</div>
 			<div >
 				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> (re)draw </a> &nbsp;
 			</div>
-			<div id="h" style="color:purple;">
-				history: &nbsp; 
+			<br>
+			<div style="color:purple;">
+				undo untill: &nbsp; 
+			</div>
+			<div id="h" style="color:purple;overflow-y:auto;;height:100px;">
 			</div>
 		</span>
 	</div>
@@ -62,11 +82,12 @@ var v ={
 	, "expanded" : []
 	, "textPixels" : 10
 	, "cloneSign" : "&#8838;"
+	, "oneSave" : false
 };
 
 var json = {
-	"a":"polotok"
-	,"b":{
+	"first":"polotok"
+	,"second":{
 		"q":null
 		,"e":345
 		,"nextb":[
@@ -88,9 +109,8 @@ var json = {
 		}
 	}
 	,"lop":false
-	, "game.gamearchetypes": [{"a":4},{"a":5}]
+	, "name.with.dot": [{"a":4},{"a":5}]
 }
-/**/
 
 var bjson = {
   "game.game_engine": [
@@ -59277,7 +59297,7 @@ function blindToObjecT(o) {
 			bicycleParent += '["'+path[i]+'"]';
 		}
 	}
-	return {"obj":bicycle,"dad":bicycleParent,"path":path};
+	return {"obj":bicycle,"dad":bicycleParent,"path":path,"key":path[path.length-1]};
 }
 
 function updateValue(parent,value) {
@@ -59290,14 +59310,37 @@ function updateValue(parent,value) {
 	draw();
 }
 
-function saveUndo() {
+function updateKey(parent,value) {
+	saveUndo();
+	eval (blindToObjecT(parent).dad+'["'+value+'"]='+blindToObjecT(parent).obj);
+	eval ('delete '+blindToObjecT(parent).obj);
+	/*
+		Theoretically we could "order" json onload and do
+		json=JSON.parse(JSON.stringify(json));
+		but do we really want that?..
+	*/
+	draw();
+	console.log(value,blindToObjecT(parent));
+}
+
+function saveUndo(once) {
+	if (once == true && v.oneSave == true) {
+		return null;	//we want only one save on clicking history steps 
+	}
 	var th = new Date();
 	t = th.getTime();
 	v.jsons[t] = JSON.parse(JSON.stringify(json));
-	document.getElementById("h").innerHTML = document.getElementById("h").innerHTML 
-		+ '<BR>'
-		+ '<u id="'+t+'" onclick="json = v.jsons[parseInt(this.id)];draw();return false;" > '+th.getHours()+':'+th.getMinutes()+':'+String(100+th.getSeconds()).slice(-2)+' </u> &nbsp;'
+	document.getElementById("h").innerHTML = '<BR>'
+		+ '<u id="'+t+'" onclick="saveUndo(true);json = v.jsons[parseInt(this.id)];draw();return false;" style="font-size:10px;cursor:pointer;"> '
+		+ String(100+th.getHours()).slice(-2)+':'+String(100+th.getMinutes()).slice(-2)+':'+String(100+th.getSeconds()).slice(-2)
+		+' </u> &nbsp;'
+		+ document.getElementById("h").innerHTML 
 	;
+	if (once == true) {
+		v.oneSave = true;
+		} else {
+		v.oneSave = false;
+	}
 }
 
 function showObject(o) {
@@ -59315,6 +59358,7 @@ function showObject(o) {
 
 function toggle(o) {
 	if (o.children[0].tagName == 'IMG') {
+		o.children[0].style.cursor = 'pointer';
 		if (o.children[0].src.slice(-5) == '+.png') {
 			o.children[0].src = '../i/-.png';
 			 } else {
@@ -59350,17 +59394,17 @@ function concatHtmlObject(obj,parent) {
     		var textArea = '<textarea title="'+parent+'" style="display:none;width:600px;height:'+Math.max(100,((v.textPixels*String(obj).split(String.fromCharCode(10)).length)))+'px;" >'+obj+'</textarea>';
     		} else {
     		var htmlShort = obj;
-    		var textArea = '<input name="" title="'+parent+'" value="'+obj+'"  style="display:none;" >';//onblur="this.style.display=\'none\';"
+    		var textArea = '<input name="" title="'+parent+'" value="'+obj+'" style="display:none;" >';//onblur="this.style.display=\'none\';"
     	}
-        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.parentNode.children[3].style.display=\'\';this.style.display=\'none\';" >'
+        return ' <i style="color:purple;" ondblclick="this.parentNode.children[5].style.display=\'\';this.parentNode.children[6].style.display=\'\';this.style.display=\'none\';" >'
         	+ htmlShort
         	+ '</i>'
         	+ textArea
-        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[2].value);" style="display:none;" type="button">'
+        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[5].value);" style="display:none;" type="button">'
         	;
     }
  	var k = Object.keys(obj);
-	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);">';
+	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);"style="">';
    	for (var key in obj) {
    		//console.log(v.expanded.indexOf(parent),parent);
    		if (typeof(parent) == 'undefined' || v.expanded.indexOf(parent) > -1) {
@@ -59390,13 +59434,18 @@ function concatHtmlObject(obj,parent) {
    				var sg = '';   			}
   			var e = '<i style="color:black;white-space:nowrap;" class="'+ar+'" >'+sg+'</i>';
     	}
+    	var htmlKey = '<b ondblclick="this.parentNode.children[1].style.display=\'\';this.parentNode.children[2].style.display=\'\';this.style.display=\'none\';">'+key+'</b>:'
+    		+ '<input value="'+key+'" style="display:none;" >'
+        	+ '<input value="OK" onclick="updateKey(\''+parent+v.delim+key+'\',this.parentNode.children[1].value);" style="display:none;" type="button">'
+	   	;
+    	//var htmlKey = key;
 		if (typeof(parent) == 'undefined') {
-			r += ''+key+'' + e + concatHtmlObject(obj[key],''+key+'');
+			r += ''+htmlKey+'' + e + concatHtmlObject(obj[key],''+key+'');
 			} else {
 				if (key.indexOf(v.typeSeparator) > 0) {
-					r += key + e + concatHtmlObject(JSON.stringify(obj[key],null,2),''+parent+v.delim+key+'');
+					r += htmlKey + e + concatHtmlObject(JSON.stringify(obj[key],null,2),''+parent+v.delim+key+'');
 					} else {
-					r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
+					r += htmlKey + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
 				}
 		}
 		r += '';
@@ -59407,7 +59456,6 @@ function concatHtmlObject(obj,parent) {
 
 function draw() {
 	document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
-	console.log(v.expanded);
 	document.getElementById('f').innerHTML = concatHtmlObject(json);
 
 }
@@ -59416,5 +59464,8 @@ function draw() {
 if (JSON.stringify(json).length < 999999	) {
 	draw();
 }
+setTimeout(function () {
+					document.getElementById('helpP').style.display = 'none';
+				},2000);
 
 </script>
