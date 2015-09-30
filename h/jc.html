@@ -25,7 +25,7 @@
 	<p>
 		click draw if no tree below. use double click for editing the value. key name changing is not implemented yet
 	</p>
-	<div style="width:1200px;height:400px;">
+	<div style="width:1600px;height:400px;">
 		<span style="width:600px;background-color:white;height:600px;float:left;">
 			<div id=f>
 			</div>
@@ -36,21 +36,19 @@
 				</textarea>
 			</div>
 		</span>
-		<span style="width:100px;background-color:white;height:100px;float:right;">
+		<span style="width:200px;background-color:white;height:100px;float:right;">
 			<div >
 				<a href="" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;">use default json </a> &nbsp;
 			</div>
 			<div >
-				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> draw </a> &nbsp;
+				<a href="" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> (re)draw </a> &nbsp;
 			</div>
-			<div >
-				<a href="" onclick="console.log(v.jsons);return false;" title="should allow to step back to any timestamp json"> history </a> &nbsp; 
+			<div id="h" style="color:purple;">
+				history: &nbsp; 
 			</div>
 		</span>
 	</div>
 	
-	history has timestampsas keys => should allow to step back to any timestamp json
-
 <script>
 
 /*
@@ -58,10 +56,12 @@
 	
 */
 var v ={
-	//"delim" : '->'
-	  "delim" : '>>'
+	  "delim" : '>>'	//'->'
+	, "typeSeparator" : ":"
 	, "jsons" : []
 	, "expanded" : []
+	, "textPixels" : 10
+	, "cloneSign" : "&#8838;"
 };
 
 var json = {
@@ -88,6 +88,7 @@ var json = {
 		}
 	}
 	,"lop":false
+	, "game.gamearchetypes": [{"a":4},{"a":5}]
 }
 /**/
 
@@ -59256,7 +59257,6 @@ var bjson = {
   ]
 }
 
-json=bjson;
 
 function blindToObjecT(o) {
 	/*
@@ -59281,20 +59281,35 @@ function blindToObjecT(o) {
 }
 
 function updateValue(parent,value) {
-	console.log(blindToObjecT(parent).obj+'="'+value+'"',parent,value);
-	eval (blindToObjecT(parent).obj+'="'+value+'"');
+	saveUndo();
+	if (parent.indexOf('json'+v.typeSeparator) > -1) {//if type is set => can be json as string => needs evaluation
+		eval (blindToObjecT(parent).obj+'='+value+'');
+		} else {
+		eval (blindToObjecT(parent).obj+'="'+value+'"');
+	}
 	draw();
-	//eval(''blindToObjecT(\''+parent+'\').dad))
+}
+
+function saveUndo() {
+	var th = new Date();
+	t = th.getTime();
+	v.jsons[t] = JSON.parse(JSON.stringify(json));
+	document.getElementById("h").innerHTML = document.getElementById("h").innerHTML 
+		+ '<BR>'
+		+ '<u id="'+t+'" onclick="json = v.jsons[parseInt(this.id)];draw();return false;" > '+th.getHours()+':'+th.getMinutes()+':'+String(100+th.getSeconds()).slice(-2)+' </u> &nbsp;'
+	;
 }
 
 function showObject(o) {
-	console.log(new Date());
+	saveUndo();
 	var co =  eval(blindToObjecT(o).obj);
 	var po =  eval(blindToObjecT(o).dad);
 	if (Object.prototype.toString.call(po) == '[object Array]') {
+		if (Object.prototype.toString.call(co) == '[object Object]') {//do we have to "reparse" Array as well?.. 
+			co = JSON.parse(JSON.stringify(co));	//dirty hack to clone object, not just readdress it
+		}
 		po.push(co);
 		draw();
-		console.log(po,json);
 	}
 }
 
@@ -59330,10 +59345,19 @@ function toggle(o) {
 
 function concatHtmlObject(obj,parent) {
     if (obj === null || typeof obj !== 'object') {
-        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.parentNode.children[3].style.display=\'\';this.style.display=\'none\';">'
-        	+ obj
-        	+ '</i><input name="" title="'+parent+'" value="'+obj+'"  style="display:none;" >'
-        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[2].value);" style="display:none;" type="button">';
+    	if (String(obj).indexOf(String.fromCharCode(10)) > -1) {
+    		var htmlShort = String(obj).substr(0,String(obj).substr(2).indexOf(String.fromCharCode(10))) + '... <sub>&#8618;</sub>';
+    		var textArea = '<textarea title="'+parent+'" style="display:none;width:600px;height:'+Math.max(100,((v.textPixels*String(obj).split(String.fromCharCode(10)).length)))+'px;" >'+obj+'</textarea>';
+    		} else {
+    		var htmlShort = obj;
+    		var textArea = '<input name="" title="'+parent+'" value="'+obj+'"  style="display:none;" >';//onblur="this.style.display=\'none\';"
+    	}
+        return ' <i style="color:purple;" ondblclick="this.parentNode.children[2].style.display=\'\';this.parentNode.children[3].style.display=\'\';this.style.display=\'none\';" >'
+        	+ htmlShort
+        	+ '</i>'
+        	+ textArea
+        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[2].value);" style="display:none;" type="button">'
+        	;
     }
  	var k = Object.keys(obj);
 	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);">';
@@ -59349,7 +59373,7 @@ function concatHtmlObject(obj,parent) {
    			if (Object.prototype.toString.call(eval(blindToObjecT(parent).obj)) == '[object Array]') {
    				//console.log(parent,obj);
    				var ar = 'array';
-    			var sg = '<a href="" class="clone" onclick="showObject(\''+parent+v.delim+key+'\');return false;">++[]</a>';
+    			var sg = '<a href="" class="clone" onclick="showObject(\''+parent+v.delim+key+'\');return false;" title="Clone this array element (which is Object) to the end of array.">'+v.cloneSign+'</a>';
   				} else {
    				var ar = 'object';
    				var sg = '';
@@ -59369,7 +59393,7 @@ function concatHtmlObject(obj,parent) {
 		if (typeof(parent) == 'undefined') {
 			r += ''+key+'' + e + concatHtmlObject(obj[key],''+key+'');
 			} else {
-				if (key.indexOf(':') > 0) {
+				if (key.indexOf(v.typeSeparator) > 0) {
 					r += key + e + concatHtmlObject(JSON.stringify(obj[key],null,2),''+parent+v.delim+key+'');
 					} else {
 					r += key + e + concatHtmlObject(obj[key],''+parent+v.delim+key+'');
@@ -59382,13 +59406,14 @@ function concatHtmlObject(obj,parent) {
 }
 
 function draw() {
+	document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
 	console.log(v.expanded);
 	document.getElementById('f').innerHTML = concatHtmlObject(json);
 
 }
-document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
 
-if (JSON.stringify(json).length < 999	) {
+//json=bjson;
+if (JSON.stringify(json).length < 999999	) {
 	draw();
 }
 
