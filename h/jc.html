@@ -28,7 +28,9 @@
 			opacity: 0.6;
 			border: 3px purple double;
 			border-radius: 5px;
-			width: 300px;
+			margin: 30px;
+			padding-left: 30px;
+			padding-right: 30px;
 			height: 30px;
 			line-height: 30px;
 			text-align: center;
@@ -39,8 +41,8 @@
 	</style>
 </head>
 <body>
-	<p id="helpP">
-		<i style="border:2px purple solid;border-radius: 10px;"> &nbsp;i&nbsp;  </i> &nbsp;&nbsp; <font id="mess"></font>
+	<p id="helpP" style="white-space:nowrap;">
+		<i style="border:2px purple solid;border-radius: 10px;white-space:nowrap;"> &nbsp;i&nbsp;  </i> &nbsp;&nbsp; <font id="mess" style="white-space:nowrap;"></font>
 	</p>
 	<div style="width:1600px;height:400px;">
 		<span style="width:600px;background-color:white;height:600px;float:left;">
@@ -50,20 +52,28 @@
 		
 		<span style="width:120px;background-color:white;height:100px;float:right;">
 			<div style="height:22px;">
-				<input type=button DISABLED value="generate JSON" onclick="document.getElementById('t').innerHTML = JSON.stringify(json,null,2);return false;"> 
+				<input type=button value="generate JSON" onclick="document.getElementById('t').value = JSON.stringify(djson,null,2);return false;"> 
 			</div>
 			<div >
-				<input type=button value="redraw" onclick="json=JSON.parse(document.getElementById('t').innerHTML);draw();return false;"> 
+				<input type=button value="redraw" onclick="var j = IsJsonString(document.getElementById('t').value);if (j.exc) {showMessage(j.exc);} else {json=j.obj;draw();}return false;"> 
 			</div>
 			<br>
+			<ul style="color:white;">
+				<li> clonning of not array Object
+				<li> support for ::int and ::float (being able to assign check function defined in outer script
+				<li> fix a bug - when rename key to json:key it changes value to sting correctly but does not allow to save it with "OK" button
+				<li> need list of "features" (eg adding ::json to key "on the fly", clonnign, etc
+				<li> make textarea on the right changes to redraw the directory
+			</ul>
 		</span>
 		
 		<span style="width:15px;float:right;border-left:3px green double;height:150%;opacity:0.2;">
 		</span>
 		
-		<span style="width:600px;background-color:green;height:600px;float:right;">
+		<span style="width:600px;background-color:#fafaff;height:600px;float:right;text-align:center;">
+			<i style="border-bottom:3px green double;color:black;">Scratchpad</i>
 			<div >
-				<textarea style="width:100%;height:100%;background-color:#eeffff;" id="t">
+				<textarea style="width:100%;height:100%;background-color:#fafaff;" id="t">
 				</textarea>
 			</div>
 		</span>
@@ -95,11 +105,12 @@ var v ={
 	, "acts" : []
 	, "expanded" : []
 	, "textPixels" : 10
-	, "cloneSign" : "&#8838;"
+	//, "cloneSign" : "&#8838;"
+	, "cloneSign" : "<img src=\"../i/clone.png\" style=\"height:20px;width:20px;\">"
 	, "oneSave" : false
 };
-
-var json = {
+var json = {};
+var djson = {
 	"first":"polotok"
 	,"second":{
 		"q":null
@@ -59314,12 +59325,24 @@ function blindToObjecT(o) {
 	return {"obj":bicycle,"dad":bicycleParent,"path":path,"key":path[path.length-1]};
 }
 
-function updateValue(parent,value) {
+function updateValue(parent,v) {
+	if (v.tagName == 'TEXTAREA') {
+		//console.log(v.innerHTML.length);
+		var val = v.value;
+	}
+	else if (v.tagName == 'INPUT') {
+		var val = v.value;
+	}
+	else  {
+		return false;
+	}
+	//console.log(v, val);
+	
 	saveUndo('<u title=" '+blindToObjecT(parent).obj.replace(/"/g, '')+'">edit value</u>');
 	if (parent.indexOf('json'+v.typeSeparator) > -1) {//if type is set => can be json as string => needs evaluation
-		eval (blindToObjecT(parent).obj+'='+value+'');
+		eval (blindToObjecT(parent).obj+'='+val+'');
 		} else {
-		eval (blindToObjecT(parent).obj+'="'+value+'"');
+		eval (blindToObjecT(parent).obj+'="'+val+'"');
 	}
 	draw();
 }
@@ -59381,8 +59404,10 @@ function toggle(o) {
 		o.children[0].style.cursor = 'pointer';
 		if (o.children[0].src.slice(-5) == '+.png') {
 			o.children[0].src = '../i/-.png';
+			o.children[0].title = 'collapse';
 			 } else {
 			o.children[0].src = '../i/+.png';
+			o.children[0].title = 'expand branch';
 		}
 	}
 	
@@ -59420,11 +59445,11 @@ function concatHtmlObject(obj,parent) {
         	+ htmlShort
         	+ '</i>'
         	+ textArea
-        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[5].value);" style="display:none;" type="button">'
+        	+ '<input value="OK" onclick="updateValue(\''+parent+'\',this.parentNode.children[5]);" style="display:none;" type="button">'
         	;
     }
  	var k = Object.keys(obj);
-	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);"style="">';
+	var r = '<UL id="'+parent+'" ><img src="../i/+.png" onclick="toggle(this.parentNode);" title="expand branch">';
    	for (var key in obj) {
    		//console.log(v.expanded.indexOf(parent),parent);
    		if (typeof(parent) == 'undefined' || v.expanded.indexOf(parent) > -1) {
@@ -59478,7 +59503,7 @@ function concatHtmlObject(obj,parent) {
 }
 
 function draw() {
-	document.getElementById('t').innerHTML = JSON.stringify(json,null,2);
+	document.getElementById('t').value = JSON.stringify(json,null,2);
 	document.getElementById('f').innerHTML = concatHtmlObject(json);
 
 }
@@ -59493,9 +59518,28 @@ function showMessage(s) {
 
 }
 
-//json=bjson;
+function IsJsonString(str) {
+	var m = new Object({"exc" : "not json","string":str,"obj":{}});
+    try {
+        var r = JSON.parse(str);
+    } catch (e) {m.exc = e;
+        return m;
+    }
+    return new Object({"obj":r,"string":JSON.stringify(str,null,2)});
+}
+
+
+
+//json=djson;
 if (JSON.stringify(json).length < 999999	) {
 	draw();
 }
+
 showMessage('use double click for editing the value. ');
+setTimeout(function () {
+		showMessage('use redraw button to display JSON as a tree');
+	},2000
+);
+
+
 </script>
