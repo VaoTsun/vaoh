@@ -76,6 +76,24 @@ function returnHtml (_html,res) {
 
 function shortLink (req,res) {
 	//console.log(JSON.stringify(go));
+	if ( go.module == '/proxy') {
+		console.log(req.query.url,req.url);
+		var request = require('request');
+		request(decodeURIComponent(req.query.url), function (error, response, body) {
+			  if (!error && response.statusCode == 200) {
+				returnHtml (body,res);
+				} else {
+				returnHtml (JSON.stringify({"url":req.url,"err":error,"resp": response},null,2),res);
+			  }
+		});
+		
+		return true;
+	} 
+	if ( go.module == '/timestamp') {
+		var d = new Date;
+		returnHtml (JSON.stringify({"ts":d.getTime(),"obj":d}),res);
+		return true;
+	} 
 	if ( go.module == '/db') {
 		fs.readFile(__dirname+'/q/'+req.query.q+'.sql',function (err, sql){
 			if (err) {
@@ -131,7 +149,7 @@ app.get('/*', function(req, res) {
 		});
 	}
 
-	if (String(req.url).indexOf('.') < 0 ) {
+	if (String(req.url).indexOf('.') < 0 /* (|| String(req.url).split(".").length - 1) */ || String(req.url).indexOf('/proxy') > -1) {
 		/*
 		if ( req.url == '/db' ) {
 			Q("select now(),* from h_views order by t desc limit 9",function() {

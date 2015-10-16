@@ -1,0 +1,94 @@
+<html>
+
+<body>
+	<div id="grid_cell_1x1" style="width:200px;height:200px;">
+	</div>
+	
+	<div id="test" style="white-space: pre;font-family: monospace;font-size:12px;">
+		
+	</div>
+	
+<script>
+	var v = {
+		"hist" : {
+			"one" : []
+		}
+		, "sett": {
+		
+		}	
+		, "wa" : {}
+	};
+	
+	function turnDetails(id) {
+		console.log(id);
+		document.getElementById(id+"_i").style.display='none';
+		
+	}
+	
+	function useGridCell(where,what) {
+		var text = document.createTextNode('hostname & sunFlower Icon'); 
+		var d = document.createElement("DIV"); 
+		d.id = what;
+		d.style.width = '100%';
+		d.style.height = '100%';
+		d.style.backgroundColor = 'pink';
+		d.style.verticalAlign = 'middle';
+		d.style.textAlign = 'center';
+		d.style.paddingTop = '0px';
+		d.appendChild(text);
+		
+		d.onmouseover=function() {
+			turnDetails(this.id)
+		};
+
+		d.onmouseout=function() {
+			document.getElementById(what+"_i").style.display='';
+		};
+		
+		var i = document.createElement("IMG"); 
+		i.src="../i/spin.png";
+		i.id=what+"_i";
+		d.appendChild(i);
+		document.getElementById(where).appendChild(d);
+	}
+	
+	
+	
+	
+	
+	
+	
+	function addToHist(a,o) {
+		/*
+			Local history should not be too big and be kept in operative variable, so we allow to define the number of steps behind
+		*/
+		if (v.hist[a].length >= v.sett.histSets[a].steps) {
+			v.hist[a].shift(o);
+		}
+		v.hist[a].push(o);
+	}
+	
+	function boo(a) {
+		var name = "one";
+		
+		e++;
+		document.getElementById("test").innerHTML = JSON.stringify(
+			{
+			"steps": v.sett.histSets[a].steps
+			, "name": a
+			, "Obj:": v.hist[a]
+			}
+			,null,2)
+		;
+			
+		setTimeout(function() {var d = new Date(); addToHist(a,{"ts":d.getTime(),"s":"msg: "+e}); boo(a);},1000);
+	}
+	
+	v.sett.histSets = new Array();
+	v.sett.histSets["one"] = {"steps":7};
+	
+	var e = 0;
+	boo("one");
+	useGridCell("grid_cell_1x1","one");
+	
+</script>
