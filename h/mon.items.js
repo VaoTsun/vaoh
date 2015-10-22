@@ -66,8 +66,8 @@ initStats({
 // mongo - heartbeat
 initStats({
 	  "id" : 'mongo heartbeat'
-	, "url" : 'http://'+window.location.host+'/timestamp'
-	, "interval" : 1
+	, "url" : 'https://vaoh.herokuapp.com/timestamp'
+	, "interval" : 4
 	, "app" : {
 		"path":""
 		,"compareFiled":"ts"
@@ -268,6 +268,7 @@ initStats({ "id" : 'cloud /pgbig'
 	}
 	, "attr" : {"icon":"hdd.png"}
 });
+//cloud /pgfast
 initStats({
 	  "id" : 'cloud /pgfast'
 	, "url" : 'http://db01.odobo.prod:7777/os'
@@ -299,6 +300,7 @@ initStats({
 	}
 	, "attr" : {"icon":"hdd.png"}
 });
+//cloud /pgarch
 initStats({
 	  "id" : 'cloud /pgarch'
 	, "url" : 'http://db01.odobo.prod:7777/os'
@@ -329,4 +331,100 @@ initStats({
 		}
 	}
 	, "attr" : {"icon":"hdd.png"}
+});
+//AWS central backup
+initStats({
+	  "id" : 'AWS-S3 /pgbackup'
+	, "url" : 'http://54.171.84.184:7777/os'
+	, "interval" : 60
+	, "app" : {
+		"path":".hdd[7].capacity"
+		, "etalon": 0.73
+		, "differs": false
+		, "alertLevel": 0
+		, "prepare": function (p) {/* prepare value from JSON date got by ajax request */
+			if (p) {
+				this.val = parseFloat(p).toFixed(3);
+			}
+		}
+		, "compare": function (p) {
+			this.prepare(p);
+			if (this.val != this.etalon) {
+				this.differs = true;
+				} else {
+				this.differs = false;
+			}
+			if (this.val > this.etalon) {
+				console.log(this.val,this.etalon);
+				this.alertLevel = Math.abs(this.etalon-this.val);
+				} else {
+				this.alertLevel = 0;
+			}
+		}
+	}
+	, "attr" : {"icon":"hdd.png"}
+});
+//RDS command center
+initStats({
+	  "id" : 'RDS Command Centre'
+	, "url" : 'http://52.18.154.16:7777/os'
+	, "interval" : 60
+	, "app" : {
+		"path":".memFree"
+		, "etalon": 1
+		, "differs": false
+		, "alertLevel": 0
+		, "prepare": function (p) {/* prepare value from JSON date got by ajax request */
+			if (p) {
+				this.val = parseFloat(p).toFixed(3);
+			}
+		}
+		, "compare": function (p) {
+			this.prepare(p);
+			if (this.val != this.etalon) {
+				this.differs = true;
+				} else {
+				this.differs = false;
+			}
+			if (this.val < this.etalon) {
+				console.log(this.val,this.etalon);
+				this.alertLevel = Math.abs(this.etalon-this.val);
+				} else {
+				this.alertLevel = 0;
+			}
+		}
+	}
+	, "attr" : {"icon":"clock.png"}
+});
+// https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:search=db-restore.odobo.ws;sort=Name
+initStats({
+	  "id" : 'Restore Free Space'
+	, "url" : 'http://52.19.112.3:7777/os'
+	, "interval" : 60
+	, "app" : {
+		"path":".hdd[7].capacity"
+		, "etalon": 0.5
+		, "differs": false
+		, "alertLevel": 0
+		, "prepare": function (p) {/* prepare value from JSON date got by ajax request */
+			if (p) {
+				this.val = parseFloat(p).toFixed(3);
+			}
+		}
+		, "compare": function (p) {
+			this.prepare(p);
+			if (this.val != this.etalon) {
+				this.differs = true;
+				} else {
+				this.differs = false;
+			}
+			if (this.val > this.etalon) {
+				console.log(this.val,this.etalon);
+				this.alertLevel = Math.abs(this.etalon-this.val);
+				} else {
+				this.alertLevel = 0;
+			}
+		}
+	}
+	, "attr" : {"icon":"clock.png"}
 });

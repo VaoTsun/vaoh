@@ -1,20 +1,24 @@
 var v = {
 	"wa" : {
+		"clearOnWscape":  ["historyOfChangesDisplayed","Menu","Orig","mainRun"]
 	}
 	, "sett" : {
 		"hideInfoInterval" : 600
 		, "bGc" : "white" 
 		, "calmBackgoundColor" : "#343434" 
-		, "gridWidth" : 100
-		, "gridHeight" : 100
-		, "gridX" : 7
+		, "gridWidth" : 110
+		, "gridHeight" : 110
+		, "gridX" : 8
 		, "gridY" : 5
 		, "histSets" : []
 		, "updatedBorder": "#c8f3b4"
 		, "alertBackground": '#330000'
+		, "defaultHistChangesSteps" : 69
+		, "defaultHistorySteps" : 89
 	}
 	, "hist" : {}
 	, "histChanges" : {}
+	, "runTime" : {"initiated":null,"errors":[]}
 };
 
 function loadJSON(path, success, error, app) {
@@ -88,7 +92,23 @@ function getNextFreeCell(id) {
 	return rid;
 }
 
+function resetOrder() {
+	localStorage.setItem('v.wa.currents',null);
+	//document.getElementById("theGrid").innerHTML='';
+	//drawGridTable();
+}
+
 function initStats(o) {
+	var s = JSON.parse(localStorage.getItem('v.wa.currents'));
+	if (s != null && s[o.id]) {
+		if (s[o.id].interval) {
+			o.interval = s[o.id].interval;
+			o.app.etalon = s[o.id].app.etalon;
+			o.app.where = s[o.id].app.where;
+			} else {
+			v.wa[o.id].interval = o.interval;
+		}
+	}
 	if (!o.app.where) {
 		o.app.where = getNextFreeCell("grid_cell_1x1");
 	}
@@ -96,62 +116,177 @@ function initStats(o) {
 
 	v.wa[o.id] = new Object(o);
 	v.wa[o.id].s = 0;
-	v.wa[o.id].interval = o.interval;
 	v.wa[o.id].hostName = getLocation(o.url).hostname;
 	v.wa[o.id].origUrl = v.wa[o.id].url;
 	v.wa[o.id].url = "http://"+window.location.host+"/proxy?url=" + encodeURIComponent(o.url);
-	document.getElementById(o.id+"_ib").innerHTML = v.wa[o.id].hostName;
+	document.getElementById(o.id+"_ib").innerHTML = '<u style="font-size:8px;color:brown;">'+v.wa[o.id].hostName+'</u>';
 	//v.wa[o.id].lastAnalyze = o.initValue;
 	//v.wa[o.id].goodColor = o.goodColor || "green";
 	
 	freshStats(o);
 
-	v.sett.histSets[o.id] = {"steps":8};
-	v.sett.histSets[o.id] = {"histChangesSteps":3};
+	v.sett.histSets[o.id] = {"steps":v.sett.defaultHistorySteps};
+	v.sett.histSets[o.id] = {"histChangesSteps":v.sett.defaultHistChangesSteps};
 	
 	v.hist[o.id] = new Array();
-	v.histChanges[o.id] = new Array();
+	v.histChanges[o.id] = JSON.parse(localStorage.getItem('v.histChanges["'+o.id+'"]')) || new Array();
 	
 	if (o.attr && o.attr.icon) {
 		document.getElementById(o.id+"_i").src = "../i/"+o.attr.icon;
 	}
 	if (o.attr && o.attr.icon) {
-		document.getElementById(o.id+"_sett").innerHTML = ''
-			+ '<img style="width:33%;float:left;height:18px;width:18px;padding-right:2px;z-index:99;" src="../i/sett.gif" title="settings" '
-				+ 'onclick="toggle(this.parentElement.children[1]);"'
-			+ '>'
-			+ '<div style="display:none;background-color:#667766;opacity:0.7;border: 1px orange dashed;margin:-3px;">'
-			+ '<BR>'
-				+ '<span style="white-space: nowrap;" >'
-					+ '<i style="color:#ffffaa" >check interval: </i>'
-					+ '<input value="'+v.wa[o.id].interval+'" style="width:20px;" onchange="v.wa[\''+o.id+'\'].interval=parseInt(this.value);saveWorkingValues();">'
-				+ '</span>'
-			+ '<BR>'
-				+ '<span style="white-space: nowrap;" >'
-					+ '<i style="color:#ffffaa" >icon: </i>'
-					+ '<input value="'+o.attr.icon+'" style="width:70px;" onchange="v.wa[\''+o.id+'\'].attr.icon=this.value;saveWorkingValues();">'
-				+ '</span>'
-			+ '<BR>'
-				+ '<span style="white-space: nowrap;" >'
-					+ '<i style="color:#ffffaa" >threshold: </i>'
-					+ '<input value="'+v.wa[o.id].app.etalon+'" style="width:70px;" onchange="v.wa[\''+o.id+'\'].app.etalon=this.value;saveWorkingValues();">'
-				+ '</span>'
-			+ '<BR>'
-				+ '<span style="white-space: nowrap;" >'
-					+ '<input value="collapse" style="width:100%;" onclick="toggle(this.parentElement.parentElement);" type="button">'
-				+ '</span>'
-			+ '</div>'
-			+ '<img src="../i/book.png" style="width:33%;float:left;height:20px;width:20px;" title="history" onclick="toggleHistory(\''+o.id+'\');">'
-			+ '<input type=button style="width:33%;float:left;height:20px;" value=">>>>>">'
-			+ ''
-		;
-	}
 	
+	var p = document.getElementById(o.id+"_sett");
+		var div = document.createElement('DIV');
+			var img = document.createElement('IMG');
+				img.onclick = mousePosition;
+				img.src = '../i/sett.gif';
+				img.onclick = mousePosition;
+				img.style.width = '20px';
+				img.title="settings";
+			div.appendChild(img);
+			div.onclick = function () {
+				showSettings(o.id);
+			}
+			div.style.width = '33%';
+			div.style.float = 'left';
+			div.style.height = '18px';
+			div.style.width = '18px';
+			div.style.paddingRight = '2px';
+	p.appendChild(div);
+
+		var hdiv = document.createElement('DIV');
+			hdiv.id = 'hdq_'+o.id;
+			hdiv.onclick = function () {
+				toggleHistory(o.id);
+			}
+			var himg = document.createElement('IMG');
+				himg.onclick = mousePosition;
+				himg.title="history";
+				himg.src = '../i/dbook.png';
+				himg.style.width = '24px';
+			hdiv.appendChild(himg);
+			hdiv.style.width = '33%';
+			hdiv.style.float = 'left';
+			hdiv.style.height = '18px';
+			hdiv.style.width = '18px';
+			hdiv.style.paddingRight = '4px';
+	p.appendChild(hdiv);
+
+		var div = document.createElement('DIV');
+			div.onclick = function () {
+				toggleOnlineState(o.id);
+			}
+			var img = document.createElement('IMG');
+				img.onclick = mousePosition;
+				img.title="history";
+				img.src = '../i/eye.gif';
+				img.style.width = '24px';
+			div.appendChild(img);
+			//div.style.width = '33%';
+			div.style.float = 'left';
+			div.style.height = '18px';
+			div.style.width = '18px';
+			div.style.paddingRight = '2px';
+			//div.innerHTML='<a href="'+v.wa[o.id].origUrl+'">'+v.wa[o.id].origUrl+'</a>';
+	p.appendChild(div);
+		var cdiv = document.createElement('DIV');
+			cdiv.id = 'history_changes_'+o.id;
+	p.appendChild(cdiv);
+		
+		
+	}
 	
 }
 
+function showSettings(a) {
+	var r = ''
+	+ '<div id="menu_'+a+'" style="background-color:#667766;opacity:0.7;border: 1px orange dashed;margin:3px;padding:5px;">'
+		+ '<BR>'
+			+ '<span style="white-space: nowrap;" >'
+				+ '<i style="color:#ffffaa" >check interval: </i>'
+				+ '<input value="'+v.wa[a].interval+'" style="width:20px;" onchange="v.wa[\''+a+'\'].interval=parseInt(this.value);saveWorkingValues();">'
+			+ '</span>'
+		+ '<BR>'
+			+ '<span style="white-space: nowrap;" >'
+				+ '<i style="color:#ffffaa" >icon: </i>'
+				+ '<input value="'+v.wa[a].attr.icon+'" style="width:70px;" onchange="v.wa[\''+a+'\'].attr.icon=this.value;saveWorkingValues();">'
+			+ '</span>'
+		+ '<BR>'
+			+ '<span style="white-space: nowrap;" >'
+				+ '<i style="color:#ffffaa" >threshold: </i>'
+				+ '<input value="'+v.wa[a].app.etalon+'" style="width:70px;" onchange="v.wa[\''+a+'\'].app.etalon=this.value;saveWorkingValues();">'
+			+ '</span>'
+		+ '<BR>'
+			+ '<span style="white-space: nowrap;" >'
+				+ '<input value="save" style="width:50%;" onclick="toggle(this.parentElement.parentElement);saveWorkingValues();" type="button">'
+				+ '<input value="cancel" style="width:50%;" onclick="toggle(this.parentElement.parentElement);" type="button">'
+			+ '</span>'
+	+ '</div>'
+	;
+	newSheet("Menu",r);
+}
+
+function toggleOnlineState(a) {
+	loadJSON(
+		  v.wa[a].url
+		, function(a,b) {
+			var r = ''
+				+ '<div style="white-space: pre;color:#aafafa;background-color:#234567;width:600px;height:400px;z-index:100;overflow-y: auto;">'
+					+ a
+				+ '</div>'
+			;
+			newSheet("Orig",r);
+		  }
+		, function(a,b,err) {app.stop = true;console.log(null,app,a.responseURL,b,err,a);}
+		, null
+	);
+
+}
+
+function toggleHistory(a) {
+	var ap = JSON.stringify(
+		{
+		  "max": v.sett.histSets[a].steps
+		, "History:": v.hist[a]
+		}
+		,null,2)
+	;
+	
+	var h = JSON.parse(localStorage.getItem('v.histChanges["'+a+'"]'));
+	var r = '';
+	for (var i = 0; i<h.length;i++) {
+		r += '<li><u style="font-size:10px;">'+ humanDate(h[i].ts) + '</u>: <i style="color:brown;">' + h[i].s + '</i>';
+	}
+	r = ''
+		+ '<div style="white-space: pre;color:#aafafa;background-color:#234567;width:300px;height:100px;z-index:100;overflow-y: auto;border: 3px orange double;" class="selectable">'
+		+ '<ul >'
+			+r
+		+ '</ul>'
+		+ '</div>'
+		+ '<BR>'
+		+ '<div style="white-space: pre;color:#bbbbff;background-color:#444567;width:300px;height:300px;z-index:100;overflow-y: auto;border: 2px orange dotted;" class="selectable">'
+		+ ap
+		+ '</div>'
+	;
+	newSheet('historyOfChangesDisplayed',r);
+}
+
 function saveWorkingValues() {
-	localStorage.setItem('v.wa',JSON.stringify(v.wa));
+	var k = Object.keys(v.wa);
+	var so = {};
+	for (var i=0;i<k.length;i++) {
+		var o = v.wa[k[i]];
+		if (typeof(o) == 'object' && o.id) {
+			so[k[i]] = {};
+			so[k[i]].app = {};
+			so[k[i]].interval = o.interval;
+			so[k[i]].app.etalon = o.app.etalon;
+			so[k[i]].app.where = o.app.where;
+		}
+	}
+	
+ 	localStorage.setItem('v.wa.currents',JSON.stringify(so));
 }
 
 function toggle(obj) {
@@ -167,6 +302,7 @@ function toggle(obj) {
 function freshStats(o) {
 	var id = o.id;
 	var app = o.app;
+	app.o = o;
 	v.wa[id].s = 0;
 	clearTimeout(v.wa[id].toMinute);
 	clearTimeout(v.wa[id].alert);
@@ -174,9 +310,12 @@ function freshStats(o) {
 	loadJSON(
 		  v.wa[id].url
 		, function(a,b) {
+			//console.log('trying ' + v.wa[id].url);
 			if (IsJsonString(a).obj.err) {
-				console.log("stopped on error!"+decodeURIComponent(v.wa[id].url),IsJsonString(a).obj.err);
+				v.runTime.errors.push({"ts":humanDate(new Date(),'YYYY.MM.DD HH24:MI:SS'),"module":decodeURIComponent(v.wa[id].url),"code":IsJsonString(a).obj.err});
+				console.log("stopped on error!",humanDate(new Date(),'YYYY.MM.DD HH24:MI:SS'),decodeURIComponent(v.wa[id].url),IsJsonString(a).obj.err);
 				app.stop = true;
+				addToHist(id,{"s":IsJsonString(a).obj.err.errno});
 				return false;
 			}
 			var d = eval('JSON.parse(a)'+app.path);
@@ -205,22 +344,29 @@ function freshStats(o) {
 					showAlert.stop(id);
 				}
 			}
-			
+
+			if(!app.stop) {
+				v.wa[id].refresh = setTimeout(
+					function() {freshStats(app.o);
+					}
+					, v.wa[id].interval*1000
+				);
+				} else {
+				console.log('STOPPED LOOPING ON ERROR!');
+					/*
+				function() {
+						freshStats(app.o);
+					}
+					, v.wa[id].interval*1000*30
+				);
+				*/
+			}
+
 		  }
 		, function(a,b,err) {app.stop = true;console.log(null,app,a.responseURL,b,err,a);}
 		, app
 	);
 
-	if(!app.stop) {
-		v.wa[id].refresh = setTimeout(
-			function() {
-				freshStats(o);
-			}
-			, v.wa[id].interval*1000
-		);
-		} else {
-		console.log('STOPPED LOOPING ON ERROR!');
-	}
 	
 }
 
@@ -283,15 +429,9 @@ function drawGridTable() {
 			td.style.height = v.sett.gridHeight;
 			var div = document.createElement('DIV'); 
 			/*
-			*/
-			/*
-			td.onmouseover = function () {
-				v.wa.currentSquare = this.id;
-				console.log('over',this.id);
-			};
-			*/
 			td.onmousedown = function () {
 				v.wa.previousSquare = this.id;
+				v.wa.currObjId = document.getElementById(this.id).children[0].id;
 				v.wa.mouseUp = false;
 			};
 			td.onmouseup = function () {
@@ -301,18 +441,27 @@ function drawGridTable() {
 				var id = document.getElementById(v.wa.previousSquare).children[0].id;
 				var o = v.wa[id];
 				o.app.where = this.id;
-				clearTimeout(v.wa[id].refresh);
-				initStats(o);
-				initStats(o);
-// 				/console.log(this.id,document.getElementById(v.wa.previousSquare).children[0].id,);
-				//useGridCell(this.id,);
+				//clearTimeout(v.wa[id].refresh);
 				document.getElementById(v.wa.previousSquare).innerHTML='';
-				
+				initStats(o);
 				v.wa.mouseUp = true;
 			};
+			*/
+			td.ondrop= function() {
+				drop(event);
+			}
+			td.ondragover= function() {
+				allowDrop(event);
+			}
 			tr.appendChild(td);
 		}
 		table.appendChild(tr);
+	}
+	table.onclick=function () {
+		v.wa.inGrid=true;
+	}
+	table.onmouseout=function () {
+		v.wa.inGrid=false;
 	}
 	document.getElementById("theGrid").appendChild(table);
 }
@@ -336,7 +485,10 @@ function useGridCell(where,what) {
 	d.style.border= '3px '+v.sett.calmBackgoundColor+' solid';
 	d.style.borderRadius='3px';
 	d.appendChild(p);
-	//d.draggable = true;
+	d.draggable = true;
+	d.ondragstart = function () {
+		drag(event);
+	}
 	
 	d.onmouseover=function() {
 		if (v.wa.keCode != 18) {
@@ -349,21 +501,6 @@ function useGridCell(where,what) {
 		this.style.zIndex = -1;
 		//console.log('')
 	};
-	/*
-	d.ondrop=function() {
-		drop(event);
-	};
-	d.ondragstart=function() {
-		drag(event);
-	};
-	d.ondragover=function() {
-		allowDrop(event);
-	};
-	d.ondrop = function () {
-		v.wa.previousSquare = this.parentElement.id;
-		console.log(event.target.id,this);
-	};
-	*/
 	d.onmouseout=function() {
 		document.getElementById(what+"_t").style.display='';
 		document.getElementById(what+"_i").style.display='';
@@ -383,7 +520,7 @@ function useGridCell(where,what) {
 	m.id=what+"_m";
 	m.style.display='none';
 	m.innerHTML = ''
-		+ '<div style="width:98%;height:20%;border:3px orange double;">'
+		+ '<div style="width:98%;height:17px;border-bottom:3px orange double;white-space:nowrap;">'
 			+ '<span style="width:20%;float:left;" id="'+what+"_tb"+'">129K</span>'
 			+ '<span style="float:right;" id="'+what+"_ib"+'"></span>'
 		+ '</div>'
@@ -416,23 +553,15 @@ function useGridCell(where,what) {
 	document.getElementById(where).appendChild(d);
 }
 
-function toggleHistory(a) {
-		document.getElementById("test").innerHTML = JSON.stringify(
-		{
-		"steps": v.sett.histSets[a].steps
-		, "name": a
-		, "Changes:": v.histChanges[a]
-		, "Obj:": v.hist[a]
-		}
-		,null,2)
-	;
-}
-
 function addToHist(a,o) {
+	document.getElementById(a+"_lts").innerHTML = 'preparing for history';
 	//console.log(a,o);
 	/*
 		Local history should not be too big and be kept in operative variable, so we allow to define the number of steps behind
 	*/
+	if (!a) {
+		console.log(v.wa[v.wa.currObjId]);
+	}
 	if (!v.hist[a] )	{
 		console.log(false,a);
 		return false;
@@ -452,7 +581,7 @@ function addToHist(a,o) {
 			v.histChanges[a].shift(o);
 		}
 		v.histChanges[a].push(o);
-		localStorage.setItem('v.histChanges',JSON.stringify(v.histChanges));
+		localStorage.setItem('v.histChanges["'+a+'"]',JSON.stringify(v.histChanges[a]));
 	}
 	
 	if ( v.hist[a][(v.hist[a].length -2 )] && o.s != v.hist[a][(v.hist[a].length -2 )].s ) {
@@ -464,7 +593,6 @@ function addToHist(a,o) {
 		interval = addZero({i:_d.getUTCHours(),t:'h'}) + addZero({i:_d.getMinutes(),t:'m'}) + addZero({i:_d.getSeconds(),t:'s'})
 		var message = '<i style="background-color:yellow;color:brown;">'+interval+'</i>'; 
 	}
-	
 	
 	document.getElementById(a+"_lts").innerHTML = ''
 		+ 'last: ' + humanDate(o.ts)
@@ -527,7 +655,7 @@ function addZero(o) {
     return _c+i;
 }
 
-function humanDate(d) {
+function humanDate(d,format) {
 	var date = new Date(d);
 	var a = [
 	   date.getFullYear(),
@@ -537,8 +665,17 @@ function humanDate(d) {
 	   date.getMinutes(),
 	   date.getSeconds(),
 	];
-	var _r = '<i title="' + a[0] + '.' + a[1] + '.' + a[2] +'">' +addZero({i:a[3],t:'h'}) + addZero({i:a[4],t:'m'}) + addZero({i:a[5],t:'s'})+ '</i>';
-	//+ addZero(_d.getUTCHours(),null,'h') + addZero(_d.getMinutes(),null,'m') + addZero(_d.getSeconds(),null,'s');
+	var _r = date;
+	if (typeof(format) == 'undefined') {
+		var _r = '<i title="' + a[0] + '.' + a[1] + '.' + a[2] +'">' +addZero({i:a[3],t:'h'}) + addZero({i:a[4],t:'m'}) + addZero({i:a[5],t:'s'})+ '</i>';
+		//+ addZero(_d.getUTCHours(),null,'h') + addZero(_d.getMinutes(),null,'m') + addZero(_d.getSeconds(),null,'s');
+	}
+	if (format == 'YYYY.MM.DD HH24:MI:SS') {
+		var _r = a[0] + '.' + a[1] + '.' + a[2] 
+			+ ' '
+			+ String(a[3]+100).slice(-2) + ':' + String(a[4]+100).slice(-2) + ':' + String(a[5]+100).slice(-2)
+		;
+	}
 	return _r;
 }
 
@@ -555,21 +692,132 @@ function getLocation(href) {
     }
 }
 
-document.onkeydown = checkKey;
-document.onkeyup = keyUp;
-
 function checkKey(e) {
     var event = window.event ? window.event : e;
     v.wa.keCode = event.keyCode;
 }
+
 function keyUp(e) {
     var event = window.event ? window.event : e;
     v.wa.keCode = 0;
 }
 
-//http://www.w3schools.com/html/html5_draganddrop.asp not working :/
+function newSheet(id,t){
+	var old = document.getElementById(id);
+	if (old) {
+		document.body.removeChild(old);
+	}
+	var e = v.wa.e;
+	var x = e.pageX + 20 + 'px';
+	var y = e.pageY + 20 + 'px';
+	var div = document.createElement('DIV');
+	div.id=id;
+	div.style.position = 'absolute';
+	div.style.left = x;
+	div.style.top = y;
+	div.style.display='';
+	div.className = 'selectable';
+	//div.appendChild(img);
+	div.innerHTML = '' + t;
+	div.onmouseover = function () {
+		v.wa.inGrid = true;
+	}
+	div.onmouseout = function () {
+		v.wa.inGrid = false;
+	}
+	document.body.appendChild(div);        
+};
+
+function mousePosition (e) {
+	v.wa.e = e;
+};
+
+function allowDrop(ev) {
+	if (ev.target.id && ev.target.id != v.wa.taken && ev.target.id.substr(0,9) != 'grid_cell') {
+		//showNotDroppable(ev);
+		document.getElementById(ev.target.id).droppable = false;
+	}
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+    v.wa.taken = ev.target.id;
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    if (ev.target.id && ev.target.id.substr(0,9) == 'grid_cell') {
+		ev.target.appendChild(document.getElementById(data));
+		v.wa[v.wa.taken].app.where = ev.target.id;
+		saveWorkingValues();
+		} else {
+		showNotDroppable(ev);
+    }
+}
+
+function showNotDroppable(ev) {
+	var o = document.getElementById(ev.target.id);
+	if (o) {
+		document.getElementById(ev.target.id).style.backgroundColor = 'red';
+		document.getElementById(ev.target.id).droppable = false;
+		setTimeout(
+			function () {
+				document.getElementById(ev.target.id).style.backgroundColor = '';
+			}
+		, 1500
+		);
+	}
+}
+
+
+
+
+
 
 drawGridTable();
 var e = 0;
-//v.sett.histSets["two"] = {"steps":17};
-//useGridCell("grid_cell_1x2","two");
+v.runTime.initiated = humanDate(new Date(),'YYYY.MM.DD HH24:MI:SS');
+document.getElementById("runTime").onmouseover = mousePosition;
+document.getElementById("runTime").onclick = function () {
+	v.wa.inGrid = false;
+	newSheet("mainRun",JSON.stringify(v.runTime,null,2));
+	document.getElementById("mainRun").style.color = 'white';
+	document.getElementById("mainRun").style.whiteSpace = 'pre';
+	v.wa.inGrid = true;
+};
+
+
+
+document.onkeydown = checkKey;
+document.onkeyup = keyUp;
+
+
+
+document.onkeyup = function(e) {
+	v.wa.key = e.keyCode;
+	for (var i=0;i<v.wa.clearOnWscape.length;i++) {
+		var old = document.getElementById(v.wa.clearOnWscape[i]);
+		if (old) {
+			document.body.removeChild(old);
+		}
+	}
+}
+
+document.body.onclick = function () {
+	if (!v.wa.inGrid) {
+		for (var i=0;i<v.wa.clearOnWscape.length;i++) {
+			var old = document.getElementById(v.wa.clearOnWscape[i]);
+			if (old) {
+				document.body.removeChild(old);
+			}
+		}
+	}
+}
+
+
+/*
+	http://www.quirksmode.org/js/events_order.html
+	http://www.w3schools.com/html/html5_draganddrop.asp not working
+*/

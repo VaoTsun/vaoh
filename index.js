@@ -2,6 +2,7 @@ var express = require('express')
 	, fs = require('fs')
 	, pg = require('pg')
 	, q = require(__dirname+'/e/db.js')
+	, mq = require(__dirname+'/e/mg.js')
 ;
 var app = express();
 var types = require('pg').types
@@ -90,6 +91,7 @@ function shortLink (req,res) {
 		return true;
 	} 
 	if ( go.module == '/timestamp') {
+		console.log(mq);
 		var d = new Date;
 		returnHtml (JSON.stringify({"ts":d.getTime(),"obj":d}),res);
 		return true;
