@@ -9,7 +9,7 @@
   "dependencies": {
     "express": "~4.9.x"
     , "pg": "~4.4.x"
-    , "mongodb": "~2.0.x"
+    , "mongoskin": "0.1.3"
   },
   "engines": {
     "node": "0.12.2"
