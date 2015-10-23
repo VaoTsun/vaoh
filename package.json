@@ -10,6 +10,7 @@
     "express": "~4.9.x"
     , "pg": "~4.4.x"
     , "mongodb": "2.0.14"
+    , "mongodb-core": "~1.0"
   },
   "engines": {
     "node": "0.12.2"
