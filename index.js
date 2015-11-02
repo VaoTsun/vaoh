@@ -145,7 +145,8 @@ app.get('/*', function(req, res) {
 	//console.log(req.connection.remoteAddress,req.headers);
 	go.module = req.url.split('?')[0];
 
-	if ( req.connection.remoteAddress != '127.0.0.1' ) {
+	if ( ['127.0.0.1',"10.0.36.1","10.0.64.5"].indexOf(req.connection.remoteAddress) ) {//
+
 		q.simpleQuery("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
 			return null;
 		});

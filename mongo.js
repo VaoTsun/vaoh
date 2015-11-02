@@ -68,3 +68,13 @@ db.createUser( {
     pwd: "pani-mo",
     roles: [ { role: "root", db: "admin" } ]
   });
+
+db.updateUser( "intercept",
+  {
+    roles: 
+    [ 
+       { role : "readWrite", db : "admin"  } 
+      ]
+  }
+)
+

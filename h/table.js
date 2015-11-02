@@ -100,9 +100,12 @@ var v = {
 	}
 	, "Data" : []
 }
-v.dataProp.query='last9';
-v.dataProp.url = window.location.origin + '/db?q='+v.dataProp.query;
-v.dataProp.url = window.location.origin + '/h/short.json';
+	v.dataProp.query='last9';
+v.dataProp.url = localStorage.getItem('url');
+if (v.dataProp.url == null ) {
+	v.dataProp.url = window.location.origin + '/db?q='+v.dataProp.query;
+	v.dataProp.url = window.location.origin + '/h/short.json';
+}
 var sav = IsJsonString(localStorage.getItem('v.dataProp.columns')).obj;
 	var $_GET = {};
 if (sav == null || Object.keys(sav).length < 1) {
@@ -358,11 +361,11 @@ function fillupTable() {
 			
 				if (v.dataProp.columns[rk[e]].dataType == 'string') {
 				
-					if (v.dataProp.columns[rk[e]].maxLength == null || val.length > parseInt(v.dataProp.columns[rk[e]].maxLength)) {
+					if (v.dataProp.columns[rk[e]].maxLength == null || String(val).length > parseInt(v.dataProp.columns[rk[e]].maxLength)) {
 						v.dataProp.columns[rk[e]].maxLength = val.length;
 					}
-					if (v.dataProp.columns[rk[e]].minLength == null || val.length <= parseInt(v.dataProp.columns[rk[e]].minLength)) {
-						v.dataProp.columns[rk[e]].minLength = val.length; 
+					if (v.dataProp.columns[rk[e]].minLength == null || String(val).length <= parseInt(v.dataProp.columns[rk[e]].minLength)) {
+						v.dataProp.columns[rk[e]].minLength = String(val).length; 
 					}
 					if (v.calcBuff[rk[e]].indexOf(val) < 0) {
 						v.calcBuff[rk[e]].push((val));
@@ -394,6 +397,16 @@ function fillupTable() {
 	return true;	
 }
 
+function toggle(obj) {
+	if (!obj.id) {
+		var el = obj;
+		} else {
+		var el = document.getElementById(obj);
+	}
+	el.style.display = (el.style.display != 'none' ? 'none' : '' );
+
+}
+
 function createHtmlTable() {
 	var startTime = new Date().getTime();
 	var k = Object.keys(data);
@@ -409,6 +422,13 @@ function createHtmlTable() {
 	header.id = "header";
 	var th = document.createElement("TH");
 	th.innerHTML='+';
+	
+	th.onclick = function() {
+		var el = document.getElementById('table_menu');
+		el.style.display = (el.style.display != 'none' ? 'none' : '' );
+		document.getElementById('v.dataProp.url').value=v.dataProp.url;
+		console.log('http://finrep00.odobo.prod:5999/api-1.1?rpName=Xcron&fromCache=0');
+	}
 	header.appendChild(th); 
 	for (var e=0;e<rk.length;e++) {
 		var th = document.createElement("TH");
@@ -618,8 +638,10 @@ function initiateColumn(e,t) {
 	v.dataProp.columns[rk[e]].dataType = t;
 	v.dataProp.columns[rk[e]].columnName = rk[e];
 	v.dataProp.columns[rk[e]].columnNr = e+1;
-	v.dataProp.columns[rk[e]].defaultMethod = sav[rk[e]].defaultMethod;
-	v.dataProp.columns[rk[e]].order = sav[rk[e]].order;
+	if (sav[rk[e]]) {
+		v.dataProp.columns[rk[e]].defaultMethod = sav[rk[e]].defaultMethod;
+		v.dataProp.columns[rk[e]].order = sav[rk[e]].order;
+	}
 	v.dataProp.columns[rk[e]].columnName = rk[e];
 }
 
@@ -1078,10 +1100,15 @@ showWaiting(0);
 prep();
 loadJSON(
 	  v.dataProp.url
-	, function(a,b) {//console.log(b);
+	, function(a,b) {
+		console.log(v.dataProp.url);//v.dataProp.url = window.location.origin + '/h/short.json';
 		v.dataProp.app.timeJsonSrc = ( new Date().getTime() - globalStartTime );
-		
-		data = JSON.parse(a).rows;
+		if (JSON.parse(a).rows) {
+			data = JSON.parse(a).rows;
+			} else {
+			data = JSON.parse(a);
+			//defaultMethod
+		}
 		
 		createHtmlTable();
 		bcl();

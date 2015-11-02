@@ -3,7 +3,7 @@ var v = {
 		"clearOnWscape":  ["historyOfChangesDisplayed","Menu","Orig","mainRun"]
 	}
 	, "sett" : {
-		"hideInfoInterval" : 600
+		  "hideInfoInterval" : 700
 		, "bGc" : "white" 
 		, "calmBackgoundColor" : "#343434" 
 		, "gridWidth" : 110
@@ -13,7 +13,7 @@ var v = {
 		, "histSets" : []
 		, "updatedBorder": "#c8f3b4"
 		, "alertBackground": '#330000'
-		, "defaultHistChangesSteps" : 69
+		, "defaultHistChangesSteps" : 969
 		, "defaultHistorySteps" : 89
 	}
 	, "hist" : {}
@@ -603,11 +603,25 @@ function addToHist(a,o) {
 	;
 	document.getElementById(a+"_ms").style.display = '';
 	document.getElementById(a+"_ms").innerHTML = message;
+	var was = document.getElementById(a+"_ms").style.color;
+	document.getElementById(a+"_ms").style.color = 'cyan';
+	setTimeout(
+		function() {
+			document.getElementById(a+"_ms").style.color = 'orange';
+		}
+		,v.sett.hideInfoInterval/2
+	);
+	setTimeout(
+		function() {
+			document.getElementById(a+"_ms").style.color = 'cyan';
+		}
+		,v.sett.hideInfoInterval
+	);
 	setTimeout(
 		function() {
 			document.getElementById(a+"_ms").style.display='none';
 		}
-		,v.sett.hideInfoInterval
+		,v.sett.hideInfoInterval+1000
 	);
 	document.getElementById(a).style.borderColor = v.sett.updatedBorder;
 	setTimeout(
@@ -692,16 +706,6 @@ function getLocation(href) {
     }
 }
 
-function checkKey(e) {
-    var event = window.event ? window.event : e;
-    v.wa.keCode = event.keyCode;
-}
-
-function keyUp(e) {
-    var event = window.event ? window.event : e;
-    v.wa.keCode = 0;
-}
-
 function newSheet(id,t){
 	var old = document.getElementById(id);
 	if (old) {
@@ -771,6 +775,35 @@ function showNotDroppable(ev) {
 	}
 }
 
+function checkKey(e) {
+	var event = window.event ? window.event : e;
+	v.wa.keCode = event.keyCode;
+	//console.log(v.wa.keCode);
+	if (v.wa.almost == 'almost' && event.keyCode==68) {	//Ctrl+D
+		if (v.wa.debug != 'on'){
+			v.wa.debug = 'on';
+			} else {
+			v.wa.debug = 'off';
+		}
+		} else {
+		if (event.keyCode == 17 ) {
+			v.wa.almost = 'almost';
+		}
+	}
+	localStorage.setItem('debug',v.wa.debug);
+}
+
+function keyUp(e) {
+	var event = window.event ? window.event : e;
+	v.wa.keCode = 0;
+}
+
+function print(o) {
+	if (localStorage.getItem('debug') == 'on') {
+		console.log(o);
+	}
+}
+
 
 
 
@@ -816,6 +849,7 @@ document.body.onclick = function () {
 	}
 }
 
+v.wa.debug = localStorage.getItem('debug') || 'off';
 
 /*
 	http://www.quirksmode.org/js/events_order.html

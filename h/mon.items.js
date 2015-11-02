@@ -428,3 +428,35 @@ initStats({
 	}
 	, "attr" : {"icon":"clock.png"}
 });
+//cloud /pgbackup
+initStats({
+	  "id" : 'cloud /pgbackups'
+	, "url" : 'http://db01.odobo.prod:7777/os'
+	, "interval" : 60
+	, "app" : {
+		"path":".hdd[3].capacity"
+		, "etalon": 0.86
+		, "differs": false
+		, "alertLevel": 0
+		, "prepare": function (p) {/* prepare value from JSON date got by ajax request */
+			if (p) {
+				this.val = parseFloat(p).toFixed(3);
+			}
+		}
+		, "compare": function (p) {
+			this.prepare(p);
+			if (this.val != this.etalon) {
+				this.differs = true;
+				} else {
+				this.differs = false;
+			}
+			if (this.val > this.etalon) {
+				console.log(this.val,this.etalon);
+				this.alertLevel = Math.abs(this.etalon-this.val);
+				} else {
+				this.alertLevel = 0;
+			}
+		}
+	}
+	, "attr" : {"icon":"hdd.png"}
+});
