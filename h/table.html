@@ -25,6 +25,8 @@
 		table {
 		    overflow: hidden
 		  ; border-collapse: collapse
+		  ; table-layout: fixed
+		  ;
 		}
 		/*
 		tr:hover[id^=tr] { 
@@ -55,7 +57,7 @@
 			; font-size: 14px
 			; white-space : nowrap
 		}
-		td[id^=hdr] {color:white;}
+		td[id^=hdr] {color:white;width:20px;}
   		td.noselect {
   			font-size:12px;border-spacing:4px;
   		    -webkit-touch-callout: none;
@@ -64,6 +66,9 @@
 			-moz-user-select: none;
 			-ms-user-select: none;
 			user-select: none;
+  		}
+  		td.wrapped {
+  			white-space : pre;
   		}
 		td[id^=calc] {
   			font-size:12px;border-spacing:4px;
@@ -110,10 +115,13 @@
 <body>
 	LISTEN channel, a na postgres tablicu trigger to NOTIFY channel on insert or update
 	<div style="width:90%;">
-		<div id="s" style="float:left;background-color:black;color:white;width:80%;opacity:0.9;">
+		<div id="s" style="float:left;background-color:black;color:white;width:70%;opacity:0.9;">
 			<a href="">settings localStorage<a/>
 		</div>
-		<div id="dbg_short" style="float:right;background-color:brown;color:white;width:20%;white-space:nowrap;">
+		
+		<div style="float:right;width:30%;white-space:nowrap;">
+			<div id="dbg_short" style="position:absolute;background-color:brown;color:white;">
+			</div>
 			
 		</div>
 	</div>
@@ -145,15 +153,18 @@
 	
 	
 	<div 
-		style="display:none;width:500px;height:100px;position:absolute;top:30px;left:30px;color:white;" 
+		style="display:none;width:600px;height:100px;position:absolute;top:30px;left:30px;color:white;z-index:102;background-color:purple;opacity:0.8;" 
 		id="table_menu"
 	>
 		<form>
 			src: <input style="width:300px;" id="v.dataProp.url" onchange="localStorage.setItem('url',this.value);" >	
 			<br>
-			<u onclick="document.getElementById('v.dataProp.url').value=this.innerHTML;">http://tools00.odobo.prod:5999/api-1.1?rpName=Xcron&fromCache=0</u>
-			/h/short.json
-			
+			<u onclick="localStorage.setItem('url',this.innerHTML);location.reload();">http://finrep00.odobo.prod:5999/api-1.1?rpName=Xcron&fromCache=0</u>
+			<br>
+			<u onclick="localStorage.setItem('url',window.location.origin + this.innerHTML);location.reload();">/h/short.json</u>
+			<br>
+			<u onclick="localStorage.setItem('url',window.location.origin + this.innerHTML);location.reload();">/c?q=wholeFarm</u>
+			<br>
 		</form>
 	</div>
 </body>

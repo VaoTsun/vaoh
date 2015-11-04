@@ -362,7 +362,7 @@ function fillupTable() {
 				if (v.dataProp.columns[rk[e]].dataType == 'string') {
 				
 					if (v.dataProp.columns[rk[e]].maxLength == null || String(val).length > parseInt(v.dataProp.columns[rk[e]].maxLength)) {
-						v.dataProp.columns[rk[e]].maxLength = val.length;
+						v.dataProp.columns[rk[e]].maxLength = String(val).length;
 					}
 					if (v.dataProp.columns[rk[e]].minLength == null || String(val).length <= parseInt(v.dataProp.columns[rk[e]].minLength)) {
 						v.dataProp.columns[rk[e]].minLength = String(val).length; 
@@ -378,6 +378,9 @@ function fillupTable() {
 			}
 			var td = $('_'+i+'_'+e); 
 			td.innerHTML = val;
+			if (rk[e] && rk[e].slice(-4) == ':wrp') {
+				td.style.whiteSpace = 'pre';
+			}
 			tdEvents(td);
 		}
 	}
@@ -422,6 +425,7 @@ function createHtmlTable() {
 	header.id = "header";
 	var th = document.createElement("TH");
 	th.innerHTML='+';
+	th.style.maxWidth = '20px;';
 	
 	th.onclick = function() {
 		var el = document.getElementById('table_menu');
@@ -738,6 +742,9 @@ function sortResults(o,a) {
 	
 	this.caseSensitive = function(s) { 
 		if (v.dataProp.caseSensitiveSort) {
+			if (s == null) {
+				return s;
+			}
 			return s.toLowerCase();
 		}
 		return s;
@@ -1083,6 +1090,12 @@ var pist = function () {
 //window.onload = onLoad();
 
 var prep = function () {
+	/*
+	var div = document.createElement("DIV"); 
+	div.id = 'dbg_short_clonned';
+	document.body.appendChild(div); 
+	$('dbg_short_clonned').innerText = $('dbg_short').innerText;
+	*/
 	console.log('initiated:' ,new Date().getTime() - globalStartTime);
 	data = new Array();
 	data[0] = new Array();
@@ -1092,6 +1105,8 @@ var prep = function () {
 	data[1]["one"] = 'polk';
 	data[2]["one"] = 'polk';
 	createHtmlTable();
+	//
+
 }
 
 

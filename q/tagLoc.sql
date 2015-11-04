@@ -1,0 +1,1 @@
+select id,val from conf.tags where tag='loc';

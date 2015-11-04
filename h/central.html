@@ -1,0 +1,228 @@
+<html lang="en">
+<head>
+	<style>
+		body {
+		  margin: 0;
+		  padding: 0;
+		  font-family: verdana, sans-serif;
+		  font-size: 69%;
+		  color: #000;
+		  background-color: #fff;
+		}
+		.light {background-color:#eedd99;}
+		.hard {background-color:#eeeded;}
+		.selectHdr {
+			border-bottom: 4px orange solid
+			; background-color:#228833
+		}
+		.selectTd {
+			  border-left : 2px blue solid
+			; border-right: 2px blue solid
+			; background-image: url(/i/r.png)
+		}
+		select {background-color: white;}
+		
+		table {
+		    overflow: hidden
+		  ; border-collapse: collapse
+		  ; table-layout: fixed
+		  ;
+		}
+		/*
+		tr:hover[id^=tr] { 
+			background-color: white; 
+			border-bottom: 2px purple solid;		  
+			opacity: 0.5;
+			z-index: 99; 
+		}
+		*/
+		td {
+			  font-family: courier
+			; font-size:12px
+			; color:black
+			; width:100px;
+			; border-style: solid
+			; border-width: 1px
+			; border-color: brown
+			; white-space : nowrap
+			}
+		th {
+			  color : white;
+			; border-style: solid
+			; border-width: 2px
+			; border-color: white
+			; background-color: blue
+			; width: 20px
+			; text-align : center
+			; font-size: 14px
+			; white-space : nowrap
+		}
+		td[id^=hdr] {color:white;width:20px;}
+  		td.noselect {
+  			font-size:12px;border-spacing:4px;
+  		    -webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+  		}
+  		td.wrapped {
+  			white-space : pre;
+  		}
+		td[id^=calc] {
+  			font-size:12px;border-spacing:4px;
+  		    -webkit-touch-callout: none;
+			-webkit-user-select: none;
+			-khtml-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		
+		}
+		/*
+		tr:hover{
+			background-color: purple; 
+			border-bottom: 2px green solid;		  
+			z-index: 99; 
+		}
+		*/
+/*
+		}
+		td, th {
+		  position: relative;
+		}
+		td:hover::after,
+		th:hover::after {
+		  content: "";
+		  position: absolute;
+		  background-color: #001;
+		  left: 0;
+		  top: -5000px;
+		  height: 10000px;
+		  width: 100%;
+		  opacity: 0.3;
+		  z-index: -1;
+		}
+		*/
+
+	</style>
+	<!--
+		http://www.w3.org/TR/css3-selectors/#attribute-substrings
+	-->
+</head>
+
+<body>
+
+	New Items:
+	<br>
+	<br>
+	<div id="env_drpdwnH" >
+	</div>
+	
+	<br>
+	
+	<div id="loc_drpdwnH" >
+	</div>
+	
+	new hostname <input id="new_hostname" style="width:300px;" value="portal.odobo.com"> <input type="button" onclick="add_hostname();" value="add">
+	<div id="sql_state" style="background-color:brown;color:white;width:500px;">
+	</div>
+	
+	<br>
+	<hr>
+	New Pairs:
+	<br>
+	<br>
+	
+	<div id="env_drpdwn" onchange="formateNewService();">
+	</div>
+	
+	<br>
+	
+	<div id="loc_drpdwn" onchange="formateNewService();">
+	</div>
+	
+	<br>
+	
+	<div id="hosts_drpdwn" onchange="formateNewService();">
+	</div>
+	
+	<br>
+	
+	<div id="serviceTypes" onchange="formateNewService();">
+	</div>
+	
+	<br>
+
+	<div id="serviceAdd">
+	</div>
+	
+	
+</body>
+
+
+<script src="ajax.js"></script>
+<script src="central.js"></script>
+
+<script>
+function add_hostname() {
+	var v = document.getElementById('new_hostname').value;
+	var env = document.getElementById('env_drpdwnH').children[0].value;
+	var loc = document.getElementById('loc_drpdwnH').children[0].value;
+	console.log(window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&env_drpdwnH='+env+'&loc_drpdwnH='+loc);
+	
+	loadJSON(
+		window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&env_drpdwnH='+env+'&loc_drpdwnH='+loc
+		, function (d,a) {
+			var d = JSON.parse(d);
+			
+			var s = document.getElementById('sql_state');
+			if (document.getElementById('new_hostname').value.length < 5 ) {
+				s.style.border = '2px orange solid';
+				s.style.backgroundColor = 'red';
+				s.style.color = 'orange';
+				s.innerHTML='value too short to be hostname';
+				return false;
+			}
+			if (d.detail) {
+				s.style.border = '2px orange solid';
+				s.style.backgroundColor = 'brown';
+				s.style.color = 'orange';
+				s.innerHTML=d.detail;
+			}
+			if (d.rowCount) {
+				s.style.border = '2px purple solid';
+				s.style.backgroundColor = 'green';
+				s.style.color = 'blue';
+				s.innerHTML=d.rows[0].ts+': '+d.rows[0].str;
+				//console.log(d);
+			}
+		}	
+		, function () {
+			console.log('err');
+		}	
+		, {}
+	);
+	
+}
+
+function formateNewService() {
+	var env = document.getElementById('env_drpdwn').children[0];
+	var loc = document.getElementById('loc_drpdwn').children[0];
+	var host = document.getElementById('hosts_drpdwn').children[0];
+	var type = document.getElementById('serviceTypes').children[0];
+	var o = document.getElementById('serviceAdd');
+	o.innerHTML='create:: '
+		+env[env.selectedIndex].text+' '+loc[loc.selectedIndex].text+' '+ host[host.selectedIndex].text+' '+type[type.selectedIndex].text+' '
+		+ '<BR>send: ' 
+		+env.value+' '+loc.value+' '+ host.value+' '+type.value+' '
+	;
+}
+
+</script>
+
+
+
+</html>
+

@@ -1,0 +1,1 @@
+select distinct id,sname from conf.service_types;

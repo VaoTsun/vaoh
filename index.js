@@ -11,6 +11,18 @@ types.setTypeParser(20, function(val) {
   return val === null ? null : parseInt(val)
 })
 
+if (process.argv[2]) {
+	fs.readFile(process.argv[2],function (err, str){
+		if (err) {
+			console.log(err);
+		}
+		delete require.cache[require.resolve(process.argv[2])]
+		var privateConf = require(process.argv[2]);
+		q.central = privateConf.central;
+	})
+}
+
+
 /*
 var moment = require('moment')
 var TIMESTAMPTZ_OID = 1114
@@ -131,6 +143,53 @@ function shortLink (req,res) {
 		})
 		return true;
 	} 
+	
+	if ( go.module == '/c') {
+		fs.readFile(__dirname+'/q/'+req.query.q+'.sql',function (err, sql){
+			var ks = Object.keys(req.query);
+			for (var i=0;i<ks.length;i++) {
+				if (ks[i] != 'q') {
+					var re = new RegExp("__"+ks[i]+"__","g");
+					sql = String(sql).replace(re, req.query[ks[i]]);
+				}
+			}
+			if (err) {
+				return console.log(254,null,err);
+			}
+			var dbe = require(__dirname+'/e/db.js');
+			dbe.privateSegmentQuery(String(sql),function() {
+				console.log(dbe);
+				if (dbe.result /*&& dbe.result.command=='SELECT'*/) {
+					var k = Object.keys(dbe.result.rows[0]);
+					var hexNeeded = false;
+					for (var e = 0; e<k.length; e++) {
+						if (k[e].slice(-4) == ':utf') {
+							hexNeeded = true;
+							console.log('utf string alerted in "'+k[e]+'" => preprocessing data internally');
+						}				
+					}
+					if (hexNeeded) {
+						console.log('utf string alerted => preprocessing data internally');
+						for (var i = 0; i<dbe.result.rows.length; i++) {
+							for (var e = 0; e<k.length; e++) {
+								if (k[e].slice(-4) == ':utf') {
+									dbe.result.rows[i][k[e]] = dbe.result.rows[i][k[e]].hexEncode();
+									//console.log(dbe.result.rows[i][k[e]].hexEncode());
+								}				
+							}
+						}
+						console.log(i + ' rows parsed');
+					}
+				
+					} else {
+					dbe.result = dbe.err;
+				}
+				returnHtml(JSON.stringify(dbe.result,null,2),res);
+			});
+		})
+		return true;
+	} 
+	
 	if ( typeof(go.cut[go.module]) != 'undefined' ) {
 		return showHtml(__dirname+go.cut[go.module],res);
 	} 
@@ -152,7 +211,7 @@ app.get('/*', function(req, res) {
 		});
 	}
 
-	if (String(req.url).indexOf('.') < 0 /* (|| String(req.url).split(".").length - 1) */ || String(req.url).indexOf('/proxy') > -1) {
+	if (String(req.url).indexOf('.') < 0 /* (|| String(req.url).split(".").length - 1) */ || String(req.url).indexOf('/proxy') > -1 || String(req.url).indexOf('/c?q=') > -1) {
 		/*
 		if ( req.url == '/db' ) {
 			Q("select now(),* from h_views order by t desc limit 9",function() {
@@ -223,3 +282,10 @@ request('http://'+conf.app.host+':'+conf.app.port+'/'+conf.app.oauth2callback, f
 	  }
 });
 */
+
+				//console.log(dbe.details);
+				//returnHtml(JSON.stringify(dbe,null,2),res);
+				//throw new Error('bah...');
+				//return false;
+
+

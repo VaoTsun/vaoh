@@ -1,0 +1,393 @@
+<html>
+	<head>
+		<title>Local</title>
+	</head>
+	<script>
+
+var platforms={
+  "srv00.c8.fun": {
+    "rest": "srv00.c8.fun"
+  },
+  "srv00.c8.nat": {
+    "rest": "srv00.c8.nat"
+  },
+  "srv00.c8.prod": {
+    "rest": "srv00.c8.prod"
+  },
+  "srv00.c8.stg": {
+    "rest": "srv00.c8.stg"
+  },
+  "srv00.freeplay.odobo.prod": {
+    "rest": "srv00.freeplay.odobo.prod"
+  },
+  "srv00.odobo.demo": {
+    "rest": "srv00.odobo.demo"
+  },
+  "srv00.odobo.prod": {
+    "rest": "srv00.odobo.prod"
+  },
+  "srv00.operator.odobo.demo": {
+    "rest": "srv00.operator.odobo.demo"
+  },
+  "srv01.c8.fun": {
+    "rest": "srv01.c8.fun"
+  },
+  "srv01.c8.nat": {
+    "rest": "srv01.c8.nat"
+  },
+  "srv01.c8.prod": {
+    "rest": "srv01.c8.prod"
+  },
+  "srv01.c8.stg": {
+    "rest": "srv01.c8.stg"
+  },
+  "srv01.freeplay.odobo.prod": {
+    "rest": "srv01.freeplay.odobo.prod"
+  },
+  "srv01.odobo.demo": {
+    "rest": "srv01.odobo.demo"
+  },
+  "srv01.odobo.prod": {
+    "rest": "srv01.odobo.prod"
+  },
+  "srv00.odobo.qa": {
+    "rest": "srv00.odobo.qa"
+  },
+  "srv00.odobo.stg": {
+    "rest": "srv00.odobo.stg"
+  },
+  "srv00.operator.odobo.stg": {
+    "rest": "srv00.operator.odobo.stg"
+  },
+  "srv01.odobo.qa": {
+    "rest": "srv01.odobo.qa"
+  },
+  "srv01.odobo.stg": {
+    "rest": "srv01.odobo.stg"
+  },
+  "srv02.odobo.qa": {
+    "rest": "srv02.odobo.qa"
+  },
+  "prdops001.prd.betfair": {
+    "rest": "prdops001.prd.betfair"
+  }
+};
+
+var schemas={
+  "db.c8.prod": {
+      "rest": "db.c8.prod"
+    , "db":"odobo_operator"
+  },
+  "native.c8.prod": {
+      "rest": "db.c8.prod"
+    , "db":"odobo_operator_native"
+  },
+  "wallet.native.c8.prod": {
+      "rest": "db.c8.prod"
+    , "db":"odobo_wallet_native"
+  },
+  "db.c8.fun": {
+      "rest": "db.c8.fun"
+    , "db":"odobo_operator_fun"
+  },
+  "wallet.c8.fun": {
+      "rest": "db.c8.fun"
+    , "db":"odobo_wallet_fun"
+  },
+  "db.c8.stg": {
+      "rest": "db.c8.stg"
+    , "db":"odobo_operator"
+  },
+  
+  "QA1": {
+      "rest": "db00.odobo.qa"
+    , "db":"odobo_cloud"
+  },
+  "QA2": {
+      "rest": "db00.odobo.qa"
+    , "db":"odobo_cloud_three"
+  },
+  "STG": {
+      "rest": "db00.odobo.stg"
+    , "db":"odobo_cloud"
+  },
+  "CERT": {
+      "rest": "db00.odobo.stg"
+    , "db":"odobo_cert"
+  },
+  "DEMO": {
+      "rest": "db00.odobo.demo"
+    , "db":"odobo_cloud"
+  },
+  "DemoOper": {
+      "rest": "db00.operator.odobo.demo"
+    , "db":"odobo_operator"
+  },
+  "DemoWallet": {
+      "rest": "db00.operator.odobo.demo"
+    , "db":"odobo_wallet"
+  },
+  
+  "cloud.prod": {
+      "rest": "db00.odobo.prod"
+    , "db":"odobo_cloud"
+  }
+}
+
+var portals={
+  "webQA": {
+      "rest": "web.operator.odobo.env:8080"
+  },
+  "QA1": {
+      "rest": "portal00.odobo.qa:8080"
+  },
+  "QA2": {
+      "rest": "portal00.odobo-bknd.qa:8080"
+  },
+  "Staging": {
+      "rest": "portal.odobo.ws"
+  },
+  "Demo": {
+      "rest": "portal.odobo.net"
+  },
+  "Certification": {
+      "rest": "portal.odobo.cert:8080"
+  },
+  "Production": {
+      "rest": "portal.odobo.com"
+  },
+}
+
+var proxy ='http://testdb1.odobo.local/tool/manitou.alerts.proxy.php?Url=';
+
+function rinse() {
+	document.getElementById('output').innerHTML = '';
+	var ak = Object.keys(platforms);
+	for (var i=0;i<ak.length;i++) {
+		var url = proxy + 'http://' + platforms[ak[i]].rest + ':9998/rest/version'
+		g = platforms[ak[i]].rest;
+		var env = g.split('.')[g.split('.').length -1];
+		if ($_GET["env"] == env || $_GET["env"] == 'all' || !$_GET["env"]) {
+			loadJSON(url,
+				 function(rtn,a) {
+					rtn = '<BR>'
+						+'<div style="width:400px;border-bottom:1px grey solid;">'
+						+'<div style="float:left;"><a href="http://'+a[0]+':9998/rest/version" style="width:20px;">' 
+						+ a[1] + '</a> : </div><div style="float:right;">' 
+						+ rtn + '</div></div>';
+					document.getElementById('output').innerHTML=document.getElementById('output').innerHTML+rtn;
+				 }
+				 , function(xhr) { 
+					console.error(xhr); 
+				 }
+				 , new Array(platforms[ak[i]].rest,ak[i])
+			);
+		
+		}
+	}
+}
+
+function schema_version() {
+	document.getElementById('schema_version').innerHTML = '';
+	var ak = Object.keys(schemas);
+	for (var i=0;i<ak.length;i++) {
+		var url = proxy + 'http://' + schemas[ak[i]].rest + ':7777/schema?db='+schemas[ak[i]].db
+		g = schemas[ak[i]].rest;
+		var env = g.split('.')[g.split('.').length -1];
+		if ($_GET["env"] == env || $_GET["env"] == 'all' || !$_GET["env"]) {
+			loadJSON(url,
+				 function(rtn,a) {
+				 	var ver = JSON.parse(rtn);
+				 	var vak = Object.keys(ver.state);
+				 	if (typeof(ver.state) == 'string') {
+				 		var version = '0';
+				 		} else {
+				 		var version = ver.state[vak.length]["version"];
+				 	}
+					rtn = '<BR>'
+						+'<div style="width:400px;border-bottom:1px grey solid;">'
+						+'<div style="float:left;"><a href="http://'+a[0]+':7777/schema?db='+a[2]+'" style="width:20px;">' 
+						+ a[1] 
+						+ '</a> : </div><div style="float:right;">' 
+						+ ver.db
+						+ ' '
+						+ version
+						+ '</div></div>';
+					document.getElementById('schema_version').innerHTML=document.getElementById('schema_version').innerHTML+rtn;
+				 }
+				 , function(xhr) { 
+					console.error(xhr); 
+				 	var ver = JSON.parse(rtn);
+				 	var vak = Object.keys(ver.state);
+					rtn = '<BR>'
+						+'<div style="width:400px;border-bottom:1px grey solid;">'
+						+'<div style="float:left;"><a href="http://'+a[0]+':7777/schema?db='+a[2]+'" style="width:20px;">' 
+						+ a[1] 
+						+ '</a> : </div><div style="float:right;">' 
+						+ ''
+						+ ' '
+						+ ' Not found'
+						+ '</div></div>';
+					document.getElementById('schema_version').innerHTML=document.getElementById('schema_version').innerHTML+rtn;
+				 }
+				 , new Array(schemas[ak[i]].rest,ak[i],schemas[ak[i]].db)
+			);
+		
+		}
+	}
+}
+
+function portals_version() {
+	document.getElementById('portals_version').innerHTML = '';
+	var ak = Object.keys(portals);
+	for (var i=0;i<ak.length;i++) {
+		var url = proxy + 'http://' + portals[ak[i]].rest + '/status'
+		g = portals[ak[i]].rest;
+		var env = g.split('.')[g.split('.').length -1];
+		env = env.split(':')[0];
+		if ($_GET["env"] == env || $_GET["env"] == 'all' || !$_GET["env"]) {
+			loadJSON(url,
+				 function(rtn,a) {
+				 	var start = '<li>App version:';
+				 	var vast = rtn.substr(rtn.indexOf(start));
+				 	var vast = vast.substr(0,vast.indexOf('</li>'));
+				 	
+					rtn = '<BR>'
+						+'<div style="width:400px;border-bottom:1px grey solid;">'
+						+'<div style="float:left;"><a href="http://'+a[0]+'/status" style="width:20px;">' 
+						+ a[1] 
+						+ '</a> : </div><div style="float:right;">' 
+						+ vast
+						+ '</div></div>';
+					document.getElementById('portals_version').innerHTML=document.getElementById('portals_version').innerHTML+rtn;
+				 }
+				 , function(xhr) { 
+					console.error(xhr); 
+				 }
+				 , new Array(portals[ak[i]].rest,ak[i],portals[ak[i]].db)
+			);
+		
+		}
+	}
+}
+
+
+
+var $_GET = {};
+var t = new Array();
+
+function parseGet() {
+	if(document.location.toString().indexOf('?') !== -1) {
+		var query = document.location.toString().replace(/^.*?\?/, '').split('&');
+
+		for(var i=0, l=query.length; i<l; i++)
+		{
+		   var aux = decodeURIComponent(query[i]).split('=');
+		   $_GET[aux[0]] = aux[1];
+		}
+	}
+}
+
+function setCookie(cname,cvalue,exdays) {
+	var d = new Date();
+	d.setTime(d.getTime()+(exdays*24*60*60*1000));
+	var expires = "expires="+d.toGMTString();
+	document.cookie = cname + "=" + cvalue + "; " + expires;
+}
+
+function getCookie(cname) {
+	var name = cname + "=";
+	var ca = document.cookie.split(';');
+	for(var i=0; i<ca.length; i++) 
+	  {
+	  var c = ca[i].trim();
+	  if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+	  }
+	return "";
+}
+
+function remember() {
+	var ak = Object.keys(platforms);
+	for (var i=0;i<ak.length;i++) {
+		var url = platforms[ak[i]].rest;
+		var env = url.split('.')[url.split('.').length -1];
+		t[env]='';
+	}
+	var nk = Object.keys(t);
+	for (var i=0;i<nk.length;i++) {
+		var env = nk[i];
+		//console.log(env);
+		var selected = '';
+		if ($_GET["env"] == env) {
+			var selected = ' SELECTED ';
+		}
+		document.getElementById('env').innerHTML=document.getElementById('env').innerHTML
+			+'<option value="'+env+'" '+selected+'>'
+			+ env
+			+'';
+	}
+	if(JSON.stringify(getCookie('platforms').length) < 10 || true) {
+		setCookie('platforms',JSON.stringify(platforms),9999999)
+	}
+	//console.log(getCookie('platforms'));
+}
+
+
+function loadJSON(path, success, error, app) {
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function()
+	{
+		if (xhr.readyState === XMLHttpRequest.DONE) {
+			if (xhr.status === 200) {
+				if (success)
+					//success(JSON.parse(xhr.responseText));
+					success(xhr.responseText, app);
+			} else {
+				if (error)
+					error(xhr);
+			}
+		}
+	};
+	xhr.open("GET", path, true);
+	xhr.send();
+}
+
+function onLoadRun() {
+	parseGet();
+	console.log('On:');
+	portals_version();
+	rinse();
+	schema_version();
+	remember();
+	
+}
+
+window.onload=onLoadRun;
+	</script>
+<body>
+
+<form method=GET>
+	<select id="env" name="env" onchange="this.form.submit();">
+		<option value="all">Filter by domain
+	</select>
+	<!--button-->
+</form>
+
+<div style="">
+	Platform
+	<div id="output" style="display: inline-block;margin:20px;">
+	</div>
+	Db:
+	<div id="schema_version" style="display: inline-block;margin:20px;">
+	</div>
+	Portals:
+	<div id="portals_version" style="display: inline-block;margin:20px;">
+	</div>
+</div>
+
+<!--
+Installation:
+
+
+
+-->
