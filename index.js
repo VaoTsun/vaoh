@@ -173,8 +173,10 @@ function shortLink (req,res) {
 						for (var i = 0; i<dbe.result.rows.length; i++) {
 							for (var e = 0; e<k.length; e++) {
 								if (k[e].slice(-4) == ':utf') {
-									dbe.result.rows[i][k[e]] = dbe.result.rows[i][k[e]].hexEncode();
-									//console.log(dbe.result.rows[i][k[e]].hexEncode());
+									if (dbe.result.rows[i][k[e]] != null ) {
+										dbe.result.rows[i][k[e]] = dbe.result.rows[i][k[e]].hexEncode();
+										//console.log(dbe.result.rows[i][k[e]].hexEncode());
+									}
 								}				
 							}
 						}
@@ -204,7 +206,7 @@ app.get('/*', function(req, res) {
 	//console.log(req.connection.remoteAddress,req.headers);
 	go.module = req.url.split('?')[0];
 
-	if ( ['127.0.0.1',"10.0.36.1","10.0.64.5"].indexOf(req.connection.remoteAddress) < 0 ) {//
+	if ( ['127.0.0.1',"10.0.36.1","10.0.64.5"].indexOf(req.connection.remoteAddress) < 0 && req.url != '/timestamp') {//
 
 		q.simpleQuery("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
 			return null;

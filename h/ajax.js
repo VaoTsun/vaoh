@@ -2,6 +2,7 @@ var v = {
 	dataProp: {
 		jsonLoadingTime: 0
 	}
+	, "wa": {}
 }
 
 function loadJSON(path, success, error, app) {
@@ -39,19 +40,17 @@ function drpDown(_o,_z) {
 	h.style.maxWidth = '20px;';
 	z.appendChild(h); 
 	
-	/*
-	th.onclick = function() {
-		var el = document.getElementById('table_menu');
-		el.style.display = (el.style.display != 'none' ? 'none' : '' );
-		document.getElementById('v.dataProp.url').value=v.dataProp.url;
-		console.log('http://finrep00.odobo.prod:5999/api-1.1?rpName=Xcron&fromCache=0');
+	h.onchange = function() {
+		this.style.color = 'blue';
 	}
-	*/
 		
 	for (var i=0;i<d.rowCount;i++) {
 		var p = document.createElement("option");
 		p.value = d.rows[i][_z.id];
 		p.text = d.rows[i][_z.value];
+		if (z.selected && z.selected == d.rows[i][_z.id]) {
+			p.selected = true;
+		}
 		h.appendChild(p); 
 	}
 	//console.log(d.fields);

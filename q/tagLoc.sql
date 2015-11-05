@@ -1,1 +1,1 @@
-select id,val from conf.tags where tag='loc';
+select id,cname as val from conf.clouds;

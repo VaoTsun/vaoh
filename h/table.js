@@ -809,7 +809,7 @@ function bcl() {
 		var utfTime = new Date().getTime();
 		for (var i=0;i<data.length;i++) {
 			for (var e=0;e<k.length;e++) {
-				if (k[e].slice(-4) == ':utf') {
+				if (k[e].slice(-4) == ':utf' && data[i][k[e]] != null ) {
 					data[i][k[e]]=data[i][k[e]].hexDecode();
 				}
 			}

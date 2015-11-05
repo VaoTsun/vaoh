@@ -22,89 +22,14 @@
 		}
 		select {background-color: white;}
 		
-		table {
-		    overflow: hidden
-		  ; border-collapse: collapse
-		  ; table-layout: fixed
-		  ;
+		input {
+			padding:2px;
+			margin:0px;
 		}
-		/*
-		tr:hover[id^=tr] { 
-			background-color: white; 
-			border-bottom: 2px purple solid;		  
-			opacity: 0.5;
-			z-index: 99; 
+		i {
+			color:blue;
+			font-size:13px;
 		}
-		*/
-		td {
-			  font-family: courier
-			; font-size:12px
-			; color:black
-			; width:100px;
-			; border-style: solid
-			; border-width: 1px
-			; border-color: brown
-			; white-space : nowrap
-			}
-		th {
-			  color : white;
-			; border-style: solid
-			; border-width: 2px
-			; border-color: white
-			; background-color: blue
-			; width: 20px
-			; text-align : center
-			; font-size: 14px
-			; white-space : nowrap
-		}
-		td[id^=hdr] {color:white;width:20px;}
-  		td.noselect {
-  			font-size:12px;border-spacing:4px;
-  		    -webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-  		}
-  		td.wrapped {
-  			white-space : pre;
-  		}
-		td[id^=calc] {
-  			font-size:12px;border-spacing:4px;
-  		    -webkit-touch-callout: none;
-			-webkit-user-select: none;
-			-khtml-user-select: none;
-			-moz-user-select: none;
-			-ms-user-select: none;
-			user-select: none;
-		
-		}
-		/*
-		tr:hover{
-			background-color: purple; 
-			border-bottom: 2px green solid;		  
-			z-index: 99; 
-		}
-		*/
-/*
-		}
-		td, th {
-		  position: relative;
-		}
-		td:hover::after,
-		th:hover::after {
-		  content: "";
-		  position: absolute;
-		  background-color: #001;
-		  left: 0;
-		  top: -5000px;
-		  height: 10000px;
-		  width: 100%;
-		  opacity: 0.3;
-		  z-index: -1;
-		}
-		*/
 
 	</style>
 	<!--
@@ -113,51 +38,86 @@
 </head>
 
 <body>
-
-	New Items:
-	<br>
-	<br>
-	<div id="env_drpdwnH" >
+	<div style="height:200px;">
+		<p>Hosts:</p>
+		<div style="width:600px;">
+			<i style="width:100px;float:left;">location</i>
+			<i >hostname</i>
+			<br>
+			<u id="loc_drpdwn">
+			</u>
+				<input id="new_hostname" style="width:300px;" value="portal.odobo.com"> 
+				<input type="button" onclick="add_hostname();" value="add">
+			<br>
+			<br>
+			<div id="sql_state" style="background-color:brown;color:white;width:100%;">
+			</div>
+			<u onclick="hostsList(this.parentElement.children[10],1); ">change</u>	
+			<i></i>		
+			<div id="changeHost">
+			</div>
+		
+		</div>
 	</div>
 	
-	<br>
 	
-	<div id="loc_drpdwnH" >
-	</div>
 	
-	new hostname <input id="new_hostname" style="width:300px;" value="portal.odobo.com"> <input type="button" onclick="add_hostname();" value="add">
-	<div id="sql_state" style="background-color:brown;color:white;width:500px;">
-	</div>
 	
-	<br>
+	
 	<hr>
 	New Pairs:
 	<br>
 	<br>
 	
-	<div id="env_drpdwn" onchange="formateNewService();">
+	<div id="env_drpdwn" onchange="formateNewService(this);">
 	</div>
 	
 	<br>
 	
-	<div id="loc_drpdwn" onchange="formateNewService();">
-	</div>
-	
 	<br>
+	<div>
+		<u onclick="hostsList(this.parentElement.children[3],2);">change</u>
+		<i></i>	
 	
-	<div id="hosts_drpdwn" onchange="formateNewService();">
-	</div>
+		<table style="white-space:nowrap;width:600px;display:none;" id="hostsTable" >
+			<tr>
+			<td>
+				<i>Rackspace:</i>
+				<br>
+				<u id="hosts_drpdwnRs" onchange="formateNewService(this);"></u>
+			</td>
+			<td>
+				<i>Amazon:</i>
+				<br>
+				<u id="hosts_drpdwnAws" onchange="formateNewService(this);"></u>
+			</td>
+			<td>
+				<i>Continent 8:</i>
+				<br>
+				<u id="hosts_drpdwnC8" onchange="formateNewService(this);"></u>
+			</td>
+			<td>
+				<i>Others: </i>
+				<br>
+				<u id="hosts_drpdwnOthers" onchange="formateNewService(this);"></u>
+			</td>
+			<td>
+				<i>Obsolete: </i>
+				<br>
+				<u id="hosts_drpdwnFalse" onchange="formateNewService(this);"></u>
+			</td>
+		</tr>
+		</table>
+		<br>
 	
-	<br>
+		<div id="serviceTypes" onchange="formateNewService(this);">
+		</div>
 	
-	<div id="serviceTypes" onchange="formateNewService();">
-	</div>
-	
-	<br>
+		<br>
 
-	<div id="serviceAdd">
+		<div id="serviceAdd">
+		</div>
 	</div>
-	
 	
 </body>
 
@@ -166,14 +126,13 @@
 <script src="central.js"></script>
 
 <script>
+
 function add_hostname() {
 	var v = document.getElementById('new_hostname').value;
-	var env = document.getElementById('env_drpdwnH').children[0].value;
-	var loc = document.getElementById('loc_drpdwnH').children[0].value;
-	console.log(window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&env_drpdwnH='+env+'&loc_drpdwnH='+loc);
+	var loc = document.getElementById('loc_drpdwn').children[0].value;
 	
 	loadJSON(
-		window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&env_drpdwnH='+env+'&loc_drpdwnH='+loc
+		window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&loc_drpdwn='+loc
 		, function (d,a) {
 			var d = JSON.parse(d);
 			
@@ -185,13 +144,17 @@ function add_hostname() {
 				s.innerHTML='value too short to be hostname';
 				return false;
 			}
+			if (d.rows[0] && d.rows[0].str && d.rows[0].str.substr(0,5) == 'ERROR') {
+				d.detail = d.rows[0].str;
+				//console.log(d.rows[0].str.substr(0,5));
+			}
 			if (d.detail) {
 				s.style.border = '2px orange solid';
 				s.style.backgroundColor = 'brown';
 				s.style.color = 'orange';
 				s.innerHTML=d.detail;
 			}
-			if (d.rowCount) {
+			if (!d.detail && d.rowCount) {
 				s.style.border = '2px purple solid';
 				s.style.backgroundColor = 'green';
 				s.style.color = 'blue';
@@ -207,20 +170,125 @@ function add_hostname() {
 	
 }
 
-function formateNewService() {
+function getHostProp(hn) {
+	loadJSON(
+		window.location.origin + '/c?q=hostNames'
+		, function (d,a) {
+			var d = JSON.parse(d);
+			for (var i=0;i<d.rowCount;i++) {
+				if (d.rows[i].hostname == hn) {
+					var l = document.getElementById('loc_drpdwn');
+					l.getElementsByTagName('option')[d.rows[i].cloud-1].selected = 'selected';
+					document.getElementById('changeHost').innerHTML=hn
+						+ ' valid: '
+						+ d.rows[i].valid
+						+ ' location: '
+						+ d.rows[i].cloud
+						+ l.innerHTML
+					;
+					console.log(d.rows[i]);
+				}
+			}
+
+		}	
+		, function () {
+			console.log('err');
+		}	
+		, {}
+	);
+
+}
+
+function formateNewService(t) {
+	var host = document.getElementById('hosts_drpdwnOthers').children[0];
+	if (t.id.substr(0,12) == 'hosts_drpdwn' ) {
+		var host = document.getElementById(t.id).children[0];
+	}
 	var env = document.getElementById('env_drpdwn').children[0];
-	var loc = document.getElementById('loc_drpdwn').children[0];
-	var host = document.getElementById('hosts_drpdwn').children[0];
 	var type = document.getElementById('serviceTypes').children[0];
 	var o = document.getElementById('serviceAdd');
-	o.innerHTML='create:: '
-		+env[env.selectedIndex].text+' '+loc[loc.selectedIndex].text+' '+ host[host.selectedIndex].text+' '+type[type.selectedIndex].text+' '
-		+ '<BR>send: ' 
-		+env.value+' '+loc.value+' '+ host.value+' '+type.value+' '
-	;
+	if (v.wa.n == 2) {
+		o.innerHTML='create:: '
+			+env[env.selectedIndex].text+'  '+ host[host.selectedIndex].text+' '+type[type.selectedIndex].text+' '
+			+ '<BR>send: ' 
+			+env.value+' '+ host.value+' '+type.value+' '
+		;
+	}
+	if (v.wa.n == 1) {
+		getHostProp(host[host.selectedIndex].text);
+	}
+}
+
+function hostsList(here,n) {
+	v.wa.n=n;
+	var o = document.getElementById('hostsTable'); 
+	var h = o.innerHTML; 
+	o.parentElement.removeChild(o); 
+	var t = document.createElement('TABLE');
+	t.id = 'hostsTable';
+	t.innerHTML = h;
+	t.style.display = '';
+	here.appendChild(t);	
 }
 
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

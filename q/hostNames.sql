@@ -1,1 +1,3 @@
-select distinct hostname id,hostname,valid::text as valid from conf.hosts order by hostname;--conf.hosts_tagged
+select distinct hostname id,hostname,valid::text as valid,cloud
+from conf.hosts 
+order by hostname;
