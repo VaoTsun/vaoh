@@ -5,6 +5,7 @@ var v = {
 	, "wa": {
 		"form":{}
 		, "consumers": []
+		, "UtfFound": false
 	}
 	, "scenarios" : {}
 }
@@ -13,15 +14,17 @@ function loadJSON(path, success, error, app) {
 	var startTime = new Date().getTime();
 	var xhr = new XMLHttpRequest();
 	var data;
-
+	if (!app.mime) {
+		app.mime="json";
+	}
+	
 	xhr.onreadystatechange = function() {
 		v.dataProp.jsonLoadingTime = ( new Date().getTime() - startTime );
-		app = null;
+		//app = null;
 		if (xhr.readyState === XMLHttpRequest.DONE) {
 			if (xhr.status === 200) {
+				//console.log(app.mime);
 				if (success) {
-					xhr.responseText = IsJsonString(xhr.responseText);
-					//console.log(xhr.responseText);
 					success(xhr.responseText, app);
 				}
 			} else {
@@ -40,7 +43,11 @@ function drpDown(_o,_z) {
 	}
 	//console.log(_z.holder);
 	//console.log(_o);
-	var d = JSON.parse(_o);
+	var d = IsJsonString(_o).obj;
+	if (!d.rows) {
+		console.log('no data for dropdown '+_z.holder);
+		return false;
+	}
 	var z = document.getElementById(_z.holder);
 	//var k = Object.keys(d.rows[0]);
 	
@@ -78,7 +85,8 @@ function IsJsonString(str) {
 	var m = new Object({"exc" : "not json","string":str,"obj":{}});
     try {
         var r = JSON.parse(str);
-    } catch (e) {//console.log(e);
+    } catch (e) {
+    	console.log(m);
         return m;
     }
     return new Object({"obj":r,"string":JSON.stringify(str,null,2)});
@@ -92,5 +100,40 @@ function toggle(obj) {
 	}
 	el.style.display = (el.style.display != 'none' ? 'none' : '' );
 
+}
+
+function dataComplicated(data) {
+	if (!data.rows) {
+		console.log('NO_DATA');
+		return data;
+	}
+	var k = Object.keys(data.rows[0]);
+	for (var i=0;i<k.length;i++) {
+		if (k[i].slice(-4) == ':utf') {
+			v.wa.UtfFound = true;
+		}
+	
+	}
+	if (v.wa.UtfFound == true) {
+		for (var i=0;i<data.rows.length;i++) {
+			for (var e=0;e<k.length;e++) {
+				if (k[e].slice(-4) == ':utf' && data.rows[i][k[e]] != null ) {
+					data.rows[i][k[e]] = data.rows[i][k[e]].hexDecode();
+				}
+			}
+		}
+	}
+	return data;
+}
+
+String.prototype.hexDecode = function(){
+    var j;
+    var hexes = this.match(/.{1,4}/g) || [];
+    var back = "";
+    for(j = 0; j<hexes.length; j++) {
+        back += String.fromCharCode(parseInt(hexes[j], 16));
+    }
+
+    return back;
 }
 

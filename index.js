@@ -71,7 +71,7 @@ var go = {
 		, "/raindrops" : "/h/raindrops.html"
 		, "/manitou" : "/h/manitou.test.html"
 	}
-	, "localHosts" : ['10.0.1.11','127.0.0.1','10.0.36.1','10.0.64.5']
+	, "localHosts" : ['10.0.1.11','127.0.0.1','10.0.36.1','10.0.64.5','10.0.36.8']
 };
 
 function showHtml(_name,res) {

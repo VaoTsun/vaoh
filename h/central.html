@@ -38,6 +38,7 @@
 </head>
 
 <body>
+
 	<div>
 		<p>
 			<a onclick="toggle('newHostDiv');return false;" href="">Register new host:</a>
@@ -45,6 +46,7 @@
 		<div id="newHostDiv" style="white-space:nowrap;width:600px;display:none;">
 		</div>
 	</div>
+	
 	<div>
 		<p>
 			<a onclick="toggle('editHostDiv');return false;" href="">Edit existing host:</a>
@@ -53,39 +55,21 @@
 		</div>
 	</div>
 	
-
-
-
-	
-	
-	<!--
-	
-	<hr>
-	New Pairs:
-	<br>
-	<br>
-	
-	<div id="env_drpdwn" onchange="formateNewService(this);">
-	</div>
-	
-	<br>
-	
-	<br>
 	<div>
-		<u onclick="hostsList(this.parentElement.children[3],2);">change</u>
-		<i></i>	
-		<br>
-	
-		<div id="serviceTypes" onchange="formateNewService(this);">
-		</div>
-	
-		<br>
-
-		<div id="serviceAdd">
+		<p> 
+			<a onclick="toggle('addService');return false;" href="">Add service:</a>
+		</p>
+		<div id="addService" style="display:;">
 		</div>
 	</div>
-	
-	-->
+
+	<div>
+		<p> 
+			<a onclick="toggle('modifyService');return false;" href="">Modify service:</a>
+		</p>
+		<div id="modifyService" style="display:;">
+		</div>
+	</div>
 	
 
 
