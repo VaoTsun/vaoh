@@ -38,31 +38,27 @@
 </head>
 
 <body>
-	<div style="height:200px;">
-		<p>Hosts:</p>
-		<div style="width:600px;">
-			<i style="width:100px;float:left;">location</i>
-			<i >hostname</i>
-			<br>
-			<u id="loc_drpdwn">
-			</u>
-				<input id="new_hostname" style="width:300px;" value="portal.odobo.com"> 
-				<input type="button" onclick="add_hostname();" value="add">
-			<br>
-			<br>
-			<div id="sql_state" style="background-color:brown;color:white;width:100%;">
-			</div>
-			<u onclick="hostsList(this.parentElement.children[10],1); ">change</u>	
-			<i></i>		
-			<div id="changeHost">
-			</div>
-		
+	<div>
+		<p>
+			<a onclick="toggle('newHostDiv');return false;" href="">Register new host:</a>
+		</p>
+		<div id="newHostDiv" style="white-space:nowrap;width:600px;display:none;">
+		</div>
+	</div>
+	<div>
+		<p>
+			<a onclick="toggle('editHostDiv');return false;" href="">Edit existing host:</a>
+		</p>
+		<div id="editHostDiv" style="display:none;">
 		</div>
 	</div>
 	
+
+
+
 	
 	
-	
+	<!--
 	
 	<hr>
 	New Pairs:
@@ -78,36 +74,6 @@
 	<div>
 		<u onclick="hostsList(this.parentElement.children[3],2);">change</u>
 		<i></i>	
-	
-		<table style="white-space:nowrap;width:600px;display:none;" id="hostsTable" >
-			<tr>
-			<td>
-				<i>Rackspace:</i>
-				<br>
-				<u id="hosts_drpdwnRs" onchange="formateNewService(this);"></u>
-			</td>
-			<td>
-				<i>Amazon:</i>
-				<br>
-				<u id="hosts_drpdwnAws" onchange="formateNewService(this);"></u>
-			</td>
-			<td>
-				<i>Continent 8:</i>
-				<br>
-				<u id="hosts_drpdwnC8" onchange="formateNewService(this);"></u>
-			</td>
-			<td>
-				<i>Others: </i>
-				<br>
-				<u id="hosts_drpdwnOthers" onchange="formateNewService(this);"></u>
-			</td>
-			<td>
-				<i>Obsolete: </i>
-				<br>
-				<u id="hosts_drpdwnFalse" onchange="formateNewService(this);"></u>
-			</td>
-		</tr>
-		</table>
 		<br>
 	
 		<div id="serviceTypes" onchange="formateNewService(this);">
@@ -119,6 +85,10 @@
 		</div>
 	</div>
 	
+	-->
+	
+
+
 </body>
 
 
@@ -127,66 +97,53 @@
 
 <script>
 
-function add_hostname() {
-	var v = document.getElementById('new_hostname').value;
-	var loc = document.getElementById('loc_drpdwn').children[0].value;
-	
-	loadJSON(
-		window.location.origin + '/c?q=insertHostname&hostname='+encodeURIComponent(v)+'&loc_drpdwn='+loc
-		, function (d,a) {
-			var d = JSON.parse(d);
-			
-			var s = document.getElementById('sql_state');
-			if (document.getElementById('new_hostname').value.length < 5 ) {
-				s.style.border = '2px orange solid';
-				s.style.backgroundColor = 'red';
-				s.style.color = 'orange';
-				s.innerHTML='value too short to be hostname';
-				return false;
-			}
-			if (d.rows[0] && d.rows[0].str && d.rows[0].str.substr(0,5) == 'ERROR') {
-				d.detail = d.rows[0].str;
-				//console.log(d.rows[0].str.substr(0,5));
-			}
-			if (d.detail) {
-				s.style.border = '2px orange solid';
-				s.style.backgroundColor = 'brown';
-				s.style.color = 'orange';
-				s.innerHTML=d.detail;
-			}
-			if (!d.detail && d.rowCount) {
-				s.style.border = '2px purple solid';
-				s.style.backgroundColor = 'green';
-				s.style.color = 'blue';
-				s.innerHTML=d.rows[0].ts+': '+d.rows[0].str;
-				//console.log(d);
-			}
-		}	
-		, function () {
-			console.log('err');
-		}	
-		, {}
-	);
-	
-}
-
 function getHostProp(hn) {
+	v.wa.form.hostname = hn;
+/*
+	v.wa.form.valid = document.getElementById('tf_drpdwn').options[e.selectedIndex].value;
+	v.wa.form.loc = document.getElementById('loc_drpdwn').options[e.selectedIndex].valuevalue;
+*/
+	document.getElementById('changeHostProp').style.display='';
 	loadJSON(
 		window.location.origin + '/c?q=hostNames'
 		, function (d,a) {
 			var d = JSON.parse(d);
 			for (var i=0;i<d.rowCount;i++) {
 				if (d.rows[i].hostname == hn) {
+					
+					//copyItem({n:3,"id":"loc_drpdwn","here":document.getElementById("landingZone1")});
 					var l = document.getElementById('loc_drpdwn');
-					l.getElementsByTagName('option')[d.rows[i].cloud-1].selected = 'selected';
+					if (d.rows[i].cloud-1 == -1) {
+						var ind = l.getElementsByTagName('option').length-1;
+						} else {
+						var ind = d.rows[i].cloud-1;
+					}
+					l.getElementsByTagName('option')[ind].selected = 'selected';
+					
+					//copyItem({"id":"tf_drpdwn","here":document.getElementById("landingZone2")});
+					var l = document.getElementById('tf_drpdwn');
+					var ind = 2;
+					if (d.rows[i].valid == 'true') {
+						var ind = 0;
+					}
+					if (d.rows[i].valid == 'false') {
+						var ind = 1;
+					}
+					//console.log(l,ind,d.rows[i].valid);
+					l.getElementsByTagName('option')[ind].selected = 'selected';
+					
+					
+					
+					
 					document.getElementById('changeHost').innerHTML=hn
 						+ ' valid: '
 						+ d.rows[i].valid
 						+ ' location: '
 						+ d.rows[i].cloud
-						+ l.innerHTML
+						//+ l.innerHTML
 					;
-					console.log(d.rows[i]);
+					 
+					//console.log(d.rows[i]);trueFalseNull
 				}
 			}
 
@@ -202,10 +159,10 @@ function getHostProp(hn) {
 function formateNewService(t) {
 	var host = document.getElementById('hosts_drpdwnOthers').children[0];
 	if (t.id.substr(0,12) == 'hosts_drpdwn' ) {
-		var host = document.getElementById(t.id).children[0];
+		var host = document.getElementById(t.id).children[0].children[0];
 	}
-	var env = document.getElementById('env_drpdwn').children[0];
-	var type = document.getElementById('serviceTypes').children[0];
+	var env = document.getElementById('env_drpdwn').children[0].children[0];
+	var type = document.getElementById('serviceTypes').children[0].children[0];
 	var o = document.getElementById('serviceAdd');
 	if (v.wa.n == 2) {
 		o.innerHTML='create:: '
@@ -230,6 +187,7 @@ function hostsList(here,n) {
 	t.style.display = '';
 	here.appendChild(t);	
 }
+
 
 </script>
 

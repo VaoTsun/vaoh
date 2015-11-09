@@ -71,6 +71,7 @@ var go = {
 		, "/raindrops" : "/h/raindrops.html"
 		, "/manitou" : "/h/manitou.test.html"
 	}
+	, "localHosts" : ['10.0.1.11','127.0.0.1','10.0.36.1','10.0.64.5']
 };
 
 function showHtml(_name,res) {
@@ -206,7 +207,7 @@ app.get('/*', function(req, res) {
 	//console.log(req.connection.remoteAddress,req.headers);
 	go.module = req.url.split('?')[0];
 
-	if ( ['127.0.0.1',"10.0.36.1","10.0.64.5"].indexOf(req.connection.remoteAddress) < 0 && req.url != '/timestamp') {//
+	if ( go.localHosts.indexOf(req.connection.remoteAddress) < 0 && req.url != '/timestamp') {//
 
 		q.simpleQuery("insert into h_views (t,ip,headers,url) select clock_timestamp(),'"+req.connection.remoteAddress+"','"+JSON.stringify(req.headers, null,2)+"'::json ,'"+req.url+"'",function() {
 			return null;

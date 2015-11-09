@@ -167,10 +167,25 @@
 			<br>
 		</form>
 	</div>
+	
+	
+	<div id="csv">
+	</div>
 </body>
 
 <script src="table.js">
 
+</script>
+
+<script>
+
+var dumpd = 'Col1,Col2,Col3\nval1,val2,val3';
+
+	csvData = new Blob([dumpd], { type: 'text/csv' }); //new way
+    var csvUrl = URL.createObjectURL(csvData);
+
+    document.getElementById("csv").innerHTML='<a href="'+csvUrl+'" download="ReportName">csv</a>';
+    
 </script>
 
 </html>
